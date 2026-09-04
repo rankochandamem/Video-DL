@@ -4,7 +4,10 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 const detect = (url) => /(?:youtube\.com|youtu\.be)/i.test(url);
+const execFileAsync = promisify(execFile);
 const runtimeBinary = process.platform === 'win32' ? 'C:\\mediadrop-runtime\\yt-dlp.exe' : ytdlp.constants.YOUTUBE_DL_PATH;
 if (process.platform === 'win32' && !fs.existsSync(runtimeBinary)) {
 	fs.mkdirSync(path.dirname(runtimeBinary), { recursive: true });
@@ -53,6 +56,16 @@ async function runExtractor(url, options) {
 		return await extractor.exec(url, extractorOptions(options), { shell: false });
 	} catch {
 		throw new Error('PROVIDER_UNAVAILABLE');
+	}
+}
+
+async function ensureCompatibleAudio(filePath) {
+	const convertedPath = `${filePath}.aac.mp4`;
+	try {
+		await execFileAsync(ffmpegPath, ['-y', '-i', filePath, '-map', '0:v:0', '-map', '0:a:0', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', convertedPath]);
+		await fs.promises.rename(convertedPath, filePath);
+	} finally {
+		await fs.promises.unlink(convertedPath).catch(() => {});
 	}
 }
 
@@ -206,6 +219,7 @@ async function download(url, formatId) {
 		const outputPath = path.join(os.tmpdir(), `mediadrop-${crypto.randomBytes(12).toString('hex')}.mp4`);
 		try {
 			await runExtractor(url, { format: `${formatId.slice(8)}+bestaudio/best`, output: outputPath, mergeOutputFormat: 'mp4', ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true });
+			await ensureCompatibleAudio(outputPath);
 			return { filePath: outputPath, contentType: 'video/mp4', filename: `mediadrop-${info.id}.mp4` };
 		} catch {
 			throw new Error('PROVIDER_UNAVAILABLE');
