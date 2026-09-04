@@ -178,7 +178,7 @@ async function getMediaInfo(url, platform) {
     || formats.find((format) => /x360|x240|x144/.test(format.quality))
     || formats.at(-1);
   if (ffmpegPath) formats.push({ id: 'social-mp3', quality: 'Audio only', extension: 'mp3', size: 'Size calculated during conversion', mimeType: 'audio/mpeg' });
-  const previewUrl = previewFormat.hasAudio ? previewFormat.url : `/api/media/preview?url=${encodeURIComponent(url)}&formatId=${encodeURIComponent(previewFormat.id)}`;
+  const previewUrl = `/api/media/preview?url=${encodeURIComponent(url)}&formatId=${encodeURIComponent(previewFormat.id)}`;
   return { platform, type: 'video', title: info.title || `${platform} video`, thumbnail: info.thumbnail || null, preview: previewUrl, duration: info.duration || null, formats, transcriptAvailable: Boolean(transcript), transcriptLanguage: transcript?.language || null };
 }
 
@@ -197,7 +197,7 @@ async function getPreview(url, formatId) {
   const formats = formatsFor(info);
   const format = formats.find((item) => item.id === formatId) || formats[0];
   if (!format) throw new Error('MEDIA_UNAVAILABLE');
-  if (!format.hasAudio && ffmpegPath) return convert(url, 'mp4', format.sourceFormatId || formatId, info.id);
+  if (ffmpegPath) return convert(url, 'mp4', format.sourceFormatId || formatId, info.id);
   return { url: format.url, contentType: format.mimeType };
 }
 
