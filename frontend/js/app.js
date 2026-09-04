@@ -40,7 +40,7 @@ form.addEventListener('submit', async (event) => {
   processingTitle.textContent = 'Detecting platform...'; await sleep(550); processingTitle.textContent = 'Checking media access...'; await sleep(550); processingTitle.textContent = 'Preparing available formats...';
   try {
     const response = await fetch(`${API_BASE}/api/media/info`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
-    const data = await response.json();
+    const data = await parseJsonResponse(response);
     if (!response.ok) throw data;
     renderResult(data, url);
   } catch (error) { renderError(error); }
@@ -70,7 +70,7 @@ function renderResult(data, url) {
 async function downloadTranscript(url) {
   try {
     const response = await fetch(`${API_BASE}/api/media/transcript`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
-    if (!response.ok) throw await response.json();
+    if (!response.ok) throw await parseJsonResponse(response);
     const blob = await response.blob();
     const disposition = response.headers.get('content-disposition') || '';
     const match = disposition.match(/filename="?([^";]+)"?/i);
@@ -89,7 +89,7 @@ async function downloadMedia(url, formatId, button) {
   button.disabled = false; button.textContent = 'Cancel'; button.classList.add('download-cancel-active'); const row = button.closest('.format-row'); const controller = new AbortController(); const progress = row.querySelector('.download-progress-row'); button.onclick = () => { progress.classList.add('hidden'); showDownloadCanceled(); controller.abort(); }; progress.classList.remove('hidden'); progress.style.flexBasis = '100%'; progress.style.marginTop = '0'; progress.querySelector('.progress-bar').style.width = '0'; progress.querySelector('.progress-copy').textContent = 'Starting secure stream...';
   try {
     const response = await fetch(`${API_BASE}/api/media/download`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, formatId }), signal: controller.signal });
-    if (!response.ok) throw await response.json();
+    if (!response.ok) throw await parseJsonResponse(response);
     const total = Number(response.headers.get('content-length')) || 0;
     if (total) row.querySelector('.format-size').textContent = formatBytes(total);
     let loaded = 0;
@@ -141,6 +141,18 @@ function showDownloadCanceled() {
   setTimeout(() => notice.remove(), 1800);
 }
 function reset() { input.value = ''; result.innerHTML = ''; resultSection.classList.add('hidden'); formError.textContent = ''; window.scrollTo({ top: 0, behavior: 'smooth' }); input.focus(); }
+async function parseJsonResponse(response) {
+  const body = await response.text();
+  try { return JSON.parse(body); } catch {
+    return {
+      success: false,
+      error: 'Service unavailable',
+      message: response.ok
+        ? 'The server returned an invalid response.'
+        : `The server returned an unexpected response (${response.status}).`
+    };
+  }
+}
 function formatBytes(bytes) { if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`; return `${(bytes / 1024 / 1024).toFixed(1)} MB`; }
 function getYouTubeId(value) { try { const parsed = new URL(value); return parsed.hostname === 'youtu.be' ? parsed.pathname.slice(1) : parsed.searchParams.get('v'); } catch { return null; } }
 function getTikTokId(value) { const match = String(value).match(/\/video\/(\d+)/i); return match ? match[1] : null; }
