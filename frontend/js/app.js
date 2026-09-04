@@ -47,6 +47,9 @@ featureModal.addEventListener('click', (event) => { if (event.target === feature
 const directMediaCard = document.querySelector('.direct-card');
 directMediaCard.addEventListener('click', openDirectMediaExamples);
 directMediaCard.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openDirectMediaExamples(); } });
+const tiktokCard = document.querySelector('.platform-card.unavailable');
+tiktokCard.addEventListener('click', openTikTokUnavailable);
+tiktokCard.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openTikTokUnavailable(); } });
 
 pasteButton.addEventListener('click', async () => {
   try {
@@ -470,6 +473,9 @@ function openAchievements() { const stats = JSON.parse(localStorage.getItem('med
 function openCalculators() { openFeatureModal('Mini calculators', 'QUICK TOOLS', '<div class="calculator-tool"><label>File size (MB)<input id="calc-size" type="number" min="0" value="50"></label><label>Download speed (Mbps)<input id="calc-speed" type="number" min="1" value="20"></label><strong id="calc-result">Approx. 20 seconds</strong></div>'); const update = () => { const size = Number(featureModalBody.querySelector('#calc-size').value) || 0; const speed = Number(featureModalBody.querySelector('#calc-speed').value) || 1; featureModalBody.querySelector('#calc-result').textContent = `Approx. ${formatDuration(size * 8 / speed)} at this speed`; }; featureModalBody.querySelectorAll('input').forEach((inputField) => inputField.addEventListener('input', update)); }
 function openDirectMediaExamples() {
   openFeatureModal('Direct media examples', 'SUPPORTED FILE TYPES', '<div class="media-examples"><div class="media-example"><span class="media-example-icon video">MP4</span><div><strong>MP4 video</strong><small>Video files from a direct public link</small></div></div><div class="media-example"><span class="media-example-icon image">JPG</span><div><strong>JPG image</strong><small>Images from a direct public link</small></div></div><div class="media-example"><span class="media-example-icon image">PNG</span><div><strong>PNG image</strong><small>Transparent and standard images</small></div></div><div class="media-example"><span class="media-example-icon video">WebM</span><div><strong>WebM video</strong><small>Modern web video files</small></div></div></div>');
+}
+function openTikTokUnavailable() {
+  openFeatureModal('TikTok is not available', 'IN DEVELOPMENT', '<div class="unavailable-message"><span class="platform-warning">!</span><p>The developer is working on TikTok support.</p></div>');
 }
 function openFeatureModal(title, kicker, body) { featureModalTitle.textContent = title; featureModalKicker.textContent = kicker; featureModalBody.innerHTML = body; featureModal.classList.remove('hidden'); }
 function closeFeatureModal() { featureModal.classList.add('hidden'); }
