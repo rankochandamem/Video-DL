@@ -1,3 +1,5 @@
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : window.location.origin;
+
 const form = document.querySelector('#download-form');
 const input = document.querySelector('#media-url');
 const pasteButton = document.querySelector('#paste-button');
@@ -36,7 +38,12 @@ form.addEventListener('submit', async (event) => {
   try { new URL(url); } catch { formError.textContent = 'Invalid link. Enter a complete http:// or https:// URL.'; input.focus(); return; }
   resultSection.classList.remove('hidden'); processing.classList.remove('hidden'); result.innerHTML = ''; resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
   processingTitle.textContent = 'Detecting platform...'; await sleep(550); processingTitle.textContent = 'Checking media access...'; await sleep(550); processingTitle.textContent = 'Preparing available formats...';
-  try { const response = await fetch('/api/media/info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }); const data = await response.json(); if (!response.ok) throw data; renderResult(data, url); } catch (error) { renderError(error); }
+  try {
+    const response = await fetch(`${API_BASE}/api/media/info`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await response.json();
+    if (!response.ok) throw data;
+    renderResult(data, url);
+  } catch (error) { renderError(error); }
   processing.classList.add('hidden');
 });
 
@@ -62,7 +69,7 @@ function renderResult(data, url) {
 
 async function downloadTranscript(url) {
   try {
-    const response = await fetch('/api/media/transcript', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const response = await fetch(`${API_BASE}/api/media/transcript`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
     if (!response.ok) throw await response.json();
     const blob = await response.blob();
     const disposition = response.headers.get('content-disposition') || '';
@@ -80,7 +87,40 @@ async function downloadTranscript(url) {
 
 async function downloadMedia(url, formatId, button) {
   button.disabled = false; button.textContent = 'Cancel'; button.classList.add('download-cancel-active'); const row = button.closest('.format-row'); const controller = new AbortController(); const progress = row.querySelector('.download-progress-row'); button.onclick = () => { progress.classList.add('hidden'); showDownloadCanceled(); controller.abort(); }; progress.classList.remove('hidden'); progress.style.flexBasis = '100%'; progress.style.marginTop = '0'; progress.querySelector('.progress-bar').style.width = '0'; progress.querySelector('.progress-copy').textContent = 'Starting secure stream...';
-  try { const response = await fetch('/api/media/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, formatId }), signal: controller.signal }); if (!response.ok) throw await response.json(); const total = Number(response.headers.get('content-length')) || 0; if (total) row.querySelector('.format-size').textContent = formatBytes(total); let loaded = 0; const chunks = []; const reader = response.body.getReader(); while (true) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); loaded += value.length; const percent = total ? Math.round(loaded / total * 100) : 0; progress.querySelector('.progress-bar').style.width = `${percent}%`; progress.querySelector('.progress-copy').textContent = total ? `${percent}% · ${formatBytes(loaded)} of ${formatBytes(total)}` : `${formatBytes(loaded)} downloaded`; } const blob = new Blob(chunks, { type: response.headers.get('content-type') || 'application/octet-stream' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = (url.split('/').pop() || 'mediadrop-download').split('?')[0]; link.click(); URL.revokeObjectURL(link.href); progress.querySelector('.progress-copy').textContent = '✓ Download complete'; button.textContent = 'Download again ↗'; button.classList.remove('download-cancel-active'); button.onclick = () => confirmDownloadAgain(url, formatId, button); } catch (error) { if (error.name === 'AbortError') progress.classList.add('hidden'); else progress.querySelector('.progress-copy').textContent = error.error || error.message || 'Download unavailable'; button.textContent = error.name === 'AbortError' ? 'Download ↗' : 'Try again ↗'; button.classList.remove('download-cancel-active'); button.onclick = error.name === 'AbortError' ? () => downloadMedia(url, formatId, button) : () => confirmDownloadAgain(url, formatId, button); }
+  try {
+    const response = await fetch(`${API_BASE}/api/media/download`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, formatId }), signal: controller.signal });
+    if (!response.ok) throw await response.json();
+    const total = Number(response.headers.get('content-length')) || 0;
+    if (total) row.querySelector('.format-size').textContent = formatBytes(total);
+    let loaded = 0;
+    const chunks = [];
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      loaded += value.length;
+      const percent = total ? Math.round(loaded / total * 100) : 0;
+      progress.querySelector('.progress-bar').style.width = `${percent}%`;
+      progress.querySelector('.progress-copy').textContent = total ? `${percent}% · ${formatBytes(loaded)} of ${formatBytes(total)}` : `${formatBytes(loaded)} downloaded`;
+    }
+    const blob = new Blob(chunks, { type: response.headers.get('content-type') || 'application/octet-stream' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = (url.split('/').pop() || 'mediadrop-download').split('?')[0];
+    link.click();
+    URL.revokeObjectURL(link.href);
+    progress.querySelector('.progress-copy').textContent = '✓ Download complete';
+    button.textContent = 'Download again ↗';
+    button.classList.remove('download-cancel-active');
+    button.onclick = () => confirmDownloadAgain(url, formatId, button);
+  } catch (error) {
+    if (error.name === 'AbortError') progress.classList.add('hidden');
+    else progress.querySelector('.progress-copy').textContent = error.error || error.message || 'Download unavailable';
+    button.textContent = error.name === 'AbortError' ? 'Download ↗' : 'Try again ↗';
+    button.classList.remove('download-cancel-active');
+    button.onclick = error.name === 'AbortError' ? () => downloadMedia(url, formatId, button) : () => confirmDownloadAgain(url, formatId, button);
+  }
 }
 function confirmDownloadAgain(url, formatId, button) {
   const overlay = document.createElement('div');
