@@ -91,11 +91,17 @@ async function fetchWithTimeout(url, options = {}) {
   finally { clearTimeout(timer); }
 }
 
+function isHostedRenderEnvironment() {
+  return Boolean(process.env.RENDER || process.env.RENDER_EXTERNAL_HOSTNAME || process.env.VERCEL || process.env.NETLIFY);
+}
+
 function findProvider(url) { return providers.find((provider) => provider.detect(url)); }
 function errorResponse(error) {
   const messages = {
     INVALID_URL: ['Invalid Link', 'Please enter a valid media URL.'], BLOCKED_HOST: ['Unable to Process This URL', 'This address is not allowed.'],
-    PROVIDER_UNAVAILABLE: ['Unable to Process This URL', 'This provider may restrict automated access or require an authorized API.'], PHOTO_UNAVAILABLE: ['Photo Unavailable', 'Facebook did not expose a downloadable image URL for this photo page. Try a direct public image URL.'], PRIVATE_CONTENT: ['Private or Restricted Content', 'Facebook requires registration or access permission for this media. MediaDrop cannot bypass that restriction.'],
+    PROVIDER_UNAVAILABLE: ['Unable to Process This URL', 'This provider may restrict automated access or require an authorized API.'],
+    YOUTUBE_BLOCKED_ON_HOSTING: ['YouTube access blocked on this host', 'This hosting environment cannot reliably access YouTube. Use a VPS or machine with a normal public IP, or switch to an authorized YouTube API integration.'],
+    PHOTO_UNAVAILABLE: ['Photo Unavailable', 'Facebook did not expose a downloadable image URL for this photo page. Try a direct public image URL.'], PRIVATE_CONTENT: ['Private or Restricted Content', 'Facebook requires registration or access permission for this media. MediaDrop cannot bypass that restriction.'],
     MEDIA_UNAVAILABLE: ['Media Unavailable', 'The requested media could not be retrieved.'], FILE_TOO_LARGE: ['File Too Large', 'This file exceeds the configured size limit.']
   };
   const [title, message] = messages[error.message] || ['Something Went Wrong', 'Please try again later.'];
@@ -130,6 +136,9 @@ app.post('/api/media/info', async (req, res) => {
     await assertPublicUrl(url);
     const provider = findProvider(url);
     if (!provider) return res.status(422).json({ success: false, error: 'Unsupported Platform', message: "This URL isn't currently supported." });
+    if (isHostedRenderEnvironment() && /(?:youtube\.com|youtu\.be)/i.test(url)) {
+      throw Object.assign(new Error('YOUTUBE_BLOCKED_ON_HOSTING'), { code: 'YOUTUBE_BLOCKED_ON_HOSTING' });
+    }
     const info = await provider.getMediaInfo(url, { fetchWithTimeout, maxFileSize });
     res.json({ success: true, url, ...info });
   } catch (error) { const result = errorResponse(error); res.status(result.status).json(result.body); }
@@ -159,6 +168,9 @@ app.post('/api/media/download', async (req, res) => {
     url = normalizeUrl(req.body?.url); await assertPublicUrl(url);
     const provider = findProvider(url);
     if (!provider || !provider.download && provider.name !== 'direct') throw new Error('PROVIDER_UNAVAILABLE');
+    if (isHostedRenderEnvironment() && /(?:youtube\.com|youtu\.be)/i.test(url)) {
+      throw new Error('YOUTUBE_BLOCKED_ON_HOSTING');
+    }
     activeDownloads += 1;
     let released = false;
     releaseSlot = () => { if (!released) { released = true; activeDownloads -= 1; } };
