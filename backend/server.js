@@ -144,9 +144,6 @@ app.post('/api/media/info', async (req, res) => {
     await assertPublicUrl(url);
     const provider = findProvider(url);
     if (!provider) return res.status(422).json({ success: false, error: 'Unsupported Platform', message: "This URL isn't currently supported." });
-    if (isHostedRenderEnvironment() && /(?:youtube\.com|youtu\.be)/i.test(url)) {
-      throw Object.assign(new Error('YOUTUBE_BLOCKED_ON_HOSTING'), { code: 'YOUTUBE_BLOCKED_ON_HOSTING' });
-    }
     const info = await provider.getMediaInfo(url, { fetchWithTimeout, maxFileSize });
     res.json({ success: true, url, ...info });
   } catch (error) {
@@ -185,9 +182,6 @@ app.post('/api/media/download', async (req, res) => {
     url = normalizeUrl(req.body?.url); await assertPublicUrl(url);
     const provider = findProvider(url);
     if (!provider || !provider.download && provider.name !== 'direct') throw new Error('PROVIDER_UNAVAILABLE');
-    if (isHostedRenderEnvironment() && /(?:youtube\.com|youtu\.be)/i.test(url)) {
-      throw new Error('YOUTUBE_BLOCKED_ON_HOSTING');
-    }
     activeDownloads += 1;
     let released = false;
     releaseSlot = () => { if (!released) { released = true; activeDownloads -= 1; } };
