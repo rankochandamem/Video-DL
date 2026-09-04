@@ -40,7 +40,6 @@ async function loadInfo(url) {
 		try {
 			return await extractor(url, extractorOptions({ dumpSingleJson: true, noWarnings: true, noPlaylist: true, skipDownload: true, extractorArgs: 'youtube:player_client=android,web' }));
 		} catch {
-			if (/registered users|login|private|sign in/i.test(error.stderr || error.message || '')) throw new Error('PRIVATE_CONTENT');
 			throw new Error('PROVIDER_UNAVAILABLE');
 		}
 	}
