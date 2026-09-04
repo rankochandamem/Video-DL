@@ -12,7 +12,6 @@ const formError = document.querySelector('#form-error');
 const themeToggle = document.querySelector('#theme-toggle');
 
 const platformNames = { direct: 'Direct media', youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', twitter: 'X / Twitter', tiktok: 'TikTok' };
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const themeIcon = themeToggle.querySelector('.theme-icon');
 if (localStorage.getItem('mediadrop-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
@@ -37,7 +36,7 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault(); formError.textContent = ''; const url = input.value.trim();
   try { new URL(url); } catch { formError.textContent = 'Invalid link. Enter a complete http:// or https:// URL.'; input.focus(); return; }
   resultSection.classList.remove('hidden'); processing.classList.remove('hidden'); result.innerHTML = ''; resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  processingTitle.textContent = 'Detecting platform...'; await sleep(550); processingTitle.textContent = 'Checking media access...'; await sleep(550); processingTitle.textContent = 'Preparing available formats...';
+  processingTitle.textContent = 'Preparing available formats...';
   try {
     const response = await fetch(`${API_BASE}/api/media/info`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
     const data = await parseJsonResponse(response);
