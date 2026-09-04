@@ -45,8 +45,17 @@ document.querySelector('#stats-button').addEventListener('click', openStats);
 document.querySelector('#feature-close').addEventListener('click', closeFeatureModal);
 featureModal.addEventListener('click', (event) => { if (event.target === featureModal) closeFeatureModal(); });
 
-pasteButton.addEventListener('click', async () => { try { input.value = await navigator.clipboard.readText(); input.focus(); } catch { input.focus(); } });
-clearButton.addEventListener('click', () => { input.value = ''; formError.textContent = ''; input.focus(); });
+pasteButton.addEventListener('click', async () => {
+  try {
+    const pasted = await navigator.clipboard.readText();
+    input.value = pasted;
+    updatePlatformHint(pasted.trim());
+    input.focus();
+  } catch {
+    input.focus();
+  }
+});
+clearButton.addEventListener('click', () => { input.value = ''; formError.textContent = ''; updatePlatformHint(''); input.focus(); });
 input.addEventListener('input', () => updatePlatformHint(input.value.trim()));
 ['dragenter', 'dragover'].forEach((eventName) => input.addEventListener(eventName, (event) => { event.preventDefault(); input.closest('.input-wrap').classList.add('drop-ready'); }));
 ['dragleave', 'drop'].forEach((eventName) => input.addEventListener(eventName, (event) => { event.preventDefault(); input.closest('.input-wrap').classList.remove('drop-ready'); }));
