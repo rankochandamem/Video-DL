@@ -12,6 +12,13 @@ if (process.platform === 'win32' && !fs.existsSync(runtimeBinary)) {
 }
 const extractor = process.platform === 'win32' ? ytdlp.create(runtimeBinary) : ytdlp;
 
+function extractorOptions(options = {}) {
+	return {
+		...options,
+		...(process.env.YTDLP_PROXY ? { proxy: process.env.YTDLP_PROXY } : {})
+	};
+}
+
 function availableFormats(info) {
 	const bestAudio = (info.formats || [])
 		.filter((format) => format.url && format.protocol === 'https' && format.vcodec === 'none' && format.acodec !== 'none')
@@ -28,7 +35,20 @@ function availableFormats(info) {
 
 async function loadInfo(url) {
 	try {
-		return await extractor(url, { dumpSingleJson: true, noWarnings: true, noPlaylist: true, skipDownload: true });
+		return await extractor(url, extractorOptions({ dumpSingleJson: true, noWarnings: true, noPlaylist: true, skipDownload: true }));
+	} catch (error) {
+		try {
+			return await extractor(url, extractorOptions({ dumpSingleJson: true, noWarnings: true, noPlaylist: true, skipDownload: true, extractorArgs: 'youtube:player_client=android,web' }));
+		} catch {
+			if (/registered users|login|private|sign in/i.test(error.stderr || error.message || '')) throw new Error('PRIVATE_CONTENT');
+			throw new Error('PROVIDER_UNAVAILABLE');
+		}
+	}
+}
+
+async function runExtractor(url, options) {
+	try {
+		return await extractor.exec(url, extractorOptions(options), { shell: false });
 	} catch {
 		throw new Error('PROVIDER_UNAVAILABLE');
 	}
@@ -170,7 +190,7 @@ async function download(url, formatId) {
 		if (!ffmpegPath) throw new Error('PROVIDER_UNAVAILABLE');
 		const outputPath = path.join(os.tmpdir(), `mediadrop-${crypto.randomBytes(12).toString('hex')}.mp3`);
 		try {
-			await extractor.exec(url, { extractAudio: true, audioFormat: 'mp3', audioQuality: '0', output: outputPath, ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true }, { shell: false });
+			await runExtractor(url, { extractAudio: true, audioFormat: 'mp3', audioQuality: '0', output: outputPath, ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true });
 			return { filePath: outputPath, contentType: 'audio/mpeg', filename: `mediadrop-${getVideoId(url)}.mp3` };
 		} catch {
 			throw new Error('PROVIDER_UNAVAILABLE');
@@ -183,7 +203,7 @@ async function download(url, formatId) {
 	if (ffmpegPath && formatId.startsWith('youtube-')) {
 		const outputPath = path.join(os.tmpdir(), `mediadrop-${crypto.randomBytes(12).toString('hex')}.mp4`);
 		try {
-			await extractor.exec(url, { format: `${formatId.slice(8)}+bestaudio/best`, output: outputPath, mergeOutputFormat: 'mp4', ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true }, { shell: false });
+			await runExtractor(url, { format: `${formatId.slice(8)}+bestaudio/best`, output: outputPath, mergeOutputFormat: 'mp4', ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true });
 			return { filePath: outputPath, contentType: 'video/mp4', filename: `mediadrop-${info.id}.mp4` };
 		} catch {
 			throw new Error('PROVIDER_UNAVAILABLE');
