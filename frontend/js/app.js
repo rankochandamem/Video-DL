@@ -22,7 +22,16 @@ const featureModalBody = document.querySelector('#feature-modal-body');
 const featureModalTitle = document.querySelector('#feature-modal-title');
 const featureModalKicker = document.querySelector('#feature-modal-kicker');
 
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}));
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+      const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+      await Promise.all(registrations.map((registration) => registration.unregister().catch(() => {})));
+      return;
+    }
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  });
+}
 
 const platformNames = { direct: 'Direct media', youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', twitter: 'X / Twitter', tiktok: 'TikTok' };
 
@@ -78,7 +87,7 @@ form.addEventListener('submit', async (event) => {
     setTimeline('Preparing');
     renderResult(data, url);
     saveHistory(data, url);
-  } catch (error) { renderError(error); }
+  } catch (error) { setTimeline('Unavailable'); renderError(error); }
   processing.classList.add('hidden');
 });
 
@@ -359,7 +368,81 @@ function formatBytes(bytes) { const value = Number(bytes) || 0; if (value < 1024
 function formatDuration(seconds) { const rounded = Math.max(0, Math.ceil(seconds)); if (rounded < 60) return `${rounded}s`; const minutes = Math.floor(rounded / 60); const remainder = rounded % 60; return `${minutes}m ${String(remainder).padStart(2, '0')}s`; }
 function notifyDownload() { if ('Notification' in window && Notification.permission === 'granted') new Notification('MediaDrop download complete', { body: 'Your media file is ready.' }); }
 function playCompletionSound() { if (localStorage.getItem('mediadrop-sound') === 'off' || !window.AudioContext) return; const audio = new AudioContext(); const oscillator = audio.createOscillator(); const gain = audio.createGain(); oscillator.frequency.value = 740; gain.gain.setValueAtTime(.05, audio.currentTime); gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .35); oscillator.connect(gain).connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + .35); }
-function setTimeline(stage) { const finalLabel = stage === 'Canceled' ? 'Canceled' : 'Complete'; const timeline = document.querySelector('.download-timeline'); const timelineSteps = [...document.querySelectorAll('.download-timeline span')]; if (timeline) timeline.classList.toggle('canceled', stage === 'Canceled'); if (timelineSteps.length) timelineSteps[timelineSteps.length - 1].textContent = finalLabel; const stages = ['Analyzing', 'Finding media', 'Preparing', 'Downloading', finalLabel]; const currentIndex = stages.indexOf(stage); timelineSteps.forEach((step) => { const stepIndex = stages.indexOf(step.textContent.trim()); step.classList.remove('active', 'done'); if (stepIndex === currentIndex) step.classList.add('active'); else if (stepIndex >= 0 && stepIndex < currentIndex) step.classList.add('done'); }); }
+function setTimeline(stage) {
+  const timeline = document.querySelector('.download-timeline');
+  const timelineSteps = [...document.querySelectorAll('.download-timeline span')];
+  if (!timeline || !timelineSteps.length) return;
+
+  const stages = ['Analyzing', 'Finding media', 'Preparing', 'Downloading', 'Complete'];
+  timelineSteps.forEach((step, index) => {
+    const stepName = stages[index] || 'Complete';
+    step.dataset.stage = stepName;
+
+    if (stage === 'Canceled' && stepName === 'Downloading') {
+      step.textContent = 'Canceled';
+      return;
+    }
+
+    if (stepName === 'Finding media' && stage === 'Unavailable') {
+      step.textContent = 'Unavailable';
+      return;
+    }
+
+    if (stepName === 'Downloading') {
+      step.textContent = stage === 'Downloading' ? 'Downloading' : stage === 'Complete' ? 'Downloaded' : 'Download';
+      return;
+    }
+
+    if (stepName === 'Complete') {
+      step.textContent = 'Complete';
+      return;
+    }
+
+    step.textContent = stepName;
+  });
+
+  if (stage === 'Canceled') {
+    timeline.classList.add('canceled');
+    timelineSteps.forEach((step) => {
+      const stepName = step.dataset.stage;
+      step.classList.remove('active', 'done', 'error');
+      if (['Analyzing', 'Finding media', 'Preparing'].includes(stepName)) {
+        step.classList.add('done');
+      } else if (stepName === 'Downloading') {
+        step.classList.add('active', 'error');
+        step.textContent = 'Canceled';
+      }
+    });
+    return;
+  }
+
+  timeline.classList.toggle('canceled', false);
+  if (stage === 'Unavailable') {
+    timelineSteps.forEach((step) => {
+      const stepName = step.dataset.stage;
+      step.classList.remove('active', 'done', 'error');
+      if (stepName === 'Analyzing') {
+        step.classList.add('active');
+        step.textContent = 'Analyzing';
+      } else if (stepName === 'Finding media') {
+        step.classList.add('active', 'error');
+        step.textContent = 'Unavailable';
+      }
+    });
+    return;
+  }
+
+  const finalLabel = stage === 'Canceled' ? 'Canceled' : 'Complete';
+  const currentIndex = stages.indexOf(stage);
+  timelineSteps.forEach((step) => {
+    const stepName = step.dataset.stage;
+    const stepIndex = stages.indexOf(stepName);
+    step.classList.remove('active', 'done', 'error');
+    if (stepIndex === currentIndex) step.classList.add('active');
+    else if (stepIndex >= 0 && stepIndex < currentIndex) step.classList.add('done');
+  });
+  timelineSteps[timelineSteps.length - 1].textContent = finalLabel;
+}
 function checkClipboard() { if (document.activeElement === input || !navigator.clipboard?.readText) return; navigator.clipboard.readText().then((text) => { if (/^https?:\/\//i.test(text) && text !== input.value && !document.querySelector('.clipboard-toast')) { const toast = document.createElement('button'); toast.className = 'clipboard-toast'; toast.textContent = 'Clipboard URL detected · Analyze'; toast.onclick = () => { input.value = text; updatePlatformHint(text); toast.remove(); form.requestSubmit(); }; document.body.appendChild(toast); setTimeout(() => toast.remove(), 7000); } }).catch(() => {}); }
 function openCommandPalette() {
   openFeatureModal('Command palette', 'KEYBOARD CONTROL', '<input class="command-search" id="command-search" placeholder="Search MediaDrop commands" autofocus><div class="command-list" id="command-list"></div>');
