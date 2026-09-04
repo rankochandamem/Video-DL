@@ -12,3 +12,15 @@
   height: 24px;
   object-fit: contain;
 }
+
+.brand-logo {
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.site-footer .brand-logo {
+  width: 44px;
+  height: 44px;
+}
