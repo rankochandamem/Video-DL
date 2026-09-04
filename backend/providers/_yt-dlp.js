@@ -174,7 +174,7 @@ async function getMediaInfo(url, platform) {
   const transcript = getCaptionSource(info);
   if (!formats.length) throw new Error('PROVIDER_UNAVAILABLE');
   if (ffmpegPath) formats.push({ id: 'social-mp3', quality: 'Audio only', extension: 'mp3', size: 'Size calculated during conversion', mimeType: 'audio/mpeg' });
-  const preview = formats.find((format) => format.hasAudio && /x360|x240|x144/.test(format.quality)) || formats.find((format) => format.hasAudio) || formats.find((format) => /x360|x240|x144/.test(format.quality)) || formats[0];
+  const preview = formats.find((format) => format.hasAudio && /x360|x240|x144/.test(format.quality)) || formats.find((format) => format.hasAudio);
   return { platform, type: 'video', title: info.title || `${platform} video`, thumbnail: info.thumbnail || null, preview: preview?.url || null, duration: info.duration || null, formats, transcriptAvailable: Boolean(transcript), transcriptLanguage: transcript?.language || null };
 }
 
