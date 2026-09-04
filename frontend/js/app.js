@@ -60,6 +60,12 @@ function renderResult(data, url) {
   const formatSummary = formatLabels.length ? (formatLabels.length === 1 ? formatLabels[0] : `${formatLabels.slice(0, -1).join(', ')} & ${formatLabels[formatLabels.length - 1]}`) : 'No options';
   const sourceIcon = data.platform === 'youtube' ? '<span class="youtube-source-icon" role="img" aria-label="YouTube logo"><span>▶</span></span>' : '<span class="source-icon">↗</span>';
   result.innerHTML = `<div class="media-preview"><div class="preview-frame">${preview}</div><div class="source-meta"><div class="source-title">${escapeHtml(data.title)}</div><div class="source-platform">${sourceIcon}${escapeHtml(platformNames[data.platform] || data.platform)}<span class="source-menu">⋮</span></div></div></div><div class="format-panel"><div class="result-header"><h2 class="result-title">Download options</h2><span class="result-format-summary">${escapeHtml(formatSummary)}</span></div><div>${formats || '<p class="status-message">No downloadable formats were returned.</p>'}</div>${transcriptButton}</div>`;
+  const previewVideo = result.querySelector('.preview-frame video');
+  if (previewVideo) {
+    const enableAudio = () => { previewVideo.muted = false; previewVideo.volume = 1; };
+    previewVideo.addEventListener('loadedmetadata', enableAudio, { once: true });
+    enableAudio();
+  }
   result.querySelectorAll('.download-format').forEach((button) => { button.onclick = () => downloadMedia(url, button.dataset.id, button); });
   const transcriptButtonNode = result.querySelector('.download-transcript');
   if (transcriptButtonNode) transcriptButtonNode.addEventListener('click', () => downloadTranscript(url));
