@@ -19,7 +19,16 @@ if (document.documentElement.dataset.theme === 'dark') themeToggle.textContent =
 pasteButton.addEventListener('click', async () => { try { input.value = await navigator.clipboard.readText(); input.focus(); } catch { input.focus(); } });
 clearButton.addEventListener('click', () => { input.value = ''; formError.textContent = ''; input.focus(); });
 
-document.querySelector('#menu-toggle').addEventListener('click', () => document.querySelector('.desktop-nav').classList.toggle('mobile-open'));
+const menuToggle = document.querySelector('#menu-toggle');
+const navigation = document.querySelector('.desktop-nav');
+menuToggle.addEventListener('click', () => {
+  const isOpen = navigation.classList.toggle('mobile-open');
+  menuToggle.setAttribute('aria-expanded', String(isOpen));
+});
+navigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+  navigation.classList.remove('mobile-open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}));
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); formError.textContent = ''; const url = input.value.trim();
