@@ -110,7 +110,7 @@ function errorResponse(error) {
     INVALID_URL: ['Invalid Link', 'Please enter a valid media URL.'], BLOCKED_HOST: ['Unable to Process This URL', 'This address is not allowed.'],
     PROVIDER_UNAVAILABLE: ['Unable to Process This URL', 'This provider may restrict automated access or require an authorized API.'],
     TIKTOK_FORMATS_UNAVAILABLE: ['TikTok Download Unavailable', 'TikTok provided a preview, but no downloadable media format was available. Try the canonical public video link again.'],
-    YOUTUBE_BLOCKED_ON_HOSTING: ['YouTube access blocked on this host', 'This hosting environment cannot reliably access YouTube. Use a VPS or machine with a normal public IP, or switch to an authorized YouTube API integration.'],
+    YOUTUBE_BLOCKED_ON_HOSTING: ['YouTube is not available', 'This hosting environment cannot reliably access YouTube. Use a VPS or machine with a normal public IP, or switch to an authorized YouTube API integration.'],
     PHOTO_UNAVAILABLE: ['Photo Unavailable', 'Facebook did not expose a downloadable image URL for this photo page. Try a direct public image URL.'], PRIVATE_CONTENT: ['Private or Restricted Content', 'Facebook requires registration or access permission for this media. MediaDrop cannot bypass that restriction.'],
     MEDIA_UNAVAILABLE: ['Media Unavailable', 'The requested media could not be retrieved.'], FILE_TOO_LARGE: ['File Too Large', 'This file exceeds the configured size limit.']
   };

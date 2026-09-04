@@ -103,8 +103,9 @@ form.addEventListener('submit', async (event) => {
 function renderError(error) {
   const title = error.error || 'Something Went Wrong';
   const message = error.message || 'Please try again later.';
+  const warningClass = /youtube/i.test(`${title} ${message}`) ? ' youtube-unavailable' : '';
   const suggestion = /invalid|url|link/i.test(`${title} ${message}`) ? 'Check that the URL is complete and publicly accessible.' : /blocked|private|restricted/i.test(`${title} ${message}`) ? 'Use a public link you are authorized to access. MediaDrop cannot bypass access controls.' : 'Try again, or choose another available format after the source responds.';
-  result.innerHTML = `<div class="error-doctor"><div class="doctor-heading"><span class="doctor-icon">!</span><div><span class="panel-kicker">DOWNLOAD DOCTOR</span><h2>${escapeHtml(title)}</h2></div></div><div class="doctor-check"><span>Problem</span><strong>${escapeHtml(message)}</strong></div><div class="doctor-check"><span>Try this</span><strong>${escapeHtml(suggestion)}</strong></div><div class="doctor-actions"><button class="retry-link" type="button">Retry analysis</button><button class="new-link" type="button">New link</button></div></div>`;
+  result.innerHTML = `<div class="error-doctor${warningClass}"><div class="doctor-heading"><span class="doctor-icon">!</span><div><span class="panel-kicker">DOWNLOAD DOCTOR</span><h2>${escapeHtml(title)}</h2></div></div><div class="doctor-check"><span>Problem</span><strong>${escapeHtml(message)}</strong></div><div class="doctor-check"><span>Try this</span><strong>${escapeHtml(suggestion)}</strong></div><div class="doctor-actions"><button class="retry-link" type="button">Retry analysis</button><button class="new-link" type="button">New link</button></div></div>`;
   result.querySelector('.retry-link').addEventListener('click', () => form.requestSubmit());
   result.querySelector('.new-link').addEventListener('click', reset);
 }
