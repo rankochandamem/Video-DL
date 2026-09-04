@@ -40,6 +40,9 @@ async function loadInfo(url) {
 		try {
 			return await extractor(url, extractorOptions({ dumpSingleJson: true, noWarnings: true, noPlaylist: true, skipDownload: true, extractorArgs: 'youtube:player_client=android,web' }));
 		} catch {
+			if (process.env.RENDER || process.env.RENDER_EXTERNAL_HOSTNAME || process.env.VERCEL || process.env.NETLIFY) {
+				throw new Error('YOUTUBE_BLOCKED_ON_HOSTING');
+			}
 			throw new Error('PROVIDER_UNAVAILABLE');
 		}
 	}
