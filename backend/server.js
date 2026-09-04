@@ -58,7 +58,8 @@ app.use(cors({
     const allowedOrigins = getAllowedOrigins();
     const isAllowed = allowedOrigins.includes(origin)
       || allowedOrigins.some((allowed) => allowed.includes('render.com') && origin.endsWith('.onrender.com'))
-      || allowedOrigins.some((allowed) => allowed.includes('localhost') && /^http:\/\/localhost:\d+$/.test(origin));
+      || allowedOrigins.some((allowed) => allowed.includes('localhost') && /^http:\/\/localhost:\d+$/.test(origin))
+      || /^http:\/\/(192\.168|10|172\.(1[6-9]|2\d|3[0-1]))\.\d+\.\d+:\d+$/.test(origin);
 
     if (isAllowed) return callback(null, true);
     console.warn('CORS blocked origin:', origin);
