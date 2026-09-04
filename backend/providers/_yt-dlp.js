@@ -201,7 +201,7 @@ async function download(url, formatId) {
   const format = formatsFor(info).find((item) => item.id === formatId);
   if (!format) throw new Error('MEDIA_UNAVAILABLE');
   if (format.hasAudio) return { url: format.url, contentType: format.mimeType, filename: `mediadrop-${info.id}.${format.extension}` };
-  if (ffmpegPath) return convert(url, 'mp4', format.formatId || formatId, info.id);
+  if (ffmpegPath) return convert(url, 'mp4', format.sourceFormatId || formatId, info.id);
   return { url: format.url, contentType: format.mimeType, filename: `mediadrop-${info.id}.${format.extension}` };
 }
 
