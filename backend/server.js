@@ -20,6 +20,21 @@ const maxFileSize = Number(process.env.MAX_FILE_SIZE_MB || 500) * 1024 * 1024;
 const maxConcurrent = Number(process.env.MAX_CONCURRENT_DOWNLOADS || 3);
 let activeDownloads = 0;
 
+function getAllowedOrigins() {
+  const configuredOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return [...new Set([
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`,
+    `http://localhost:3001`,
+    `http://127.0.0.1:3001`,
+    ...configuredOrigins
+  ])];
+}
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
@@ -31,7 +46,18 @@ app.use(helmet({
     }
   }
 }));
-app.use(cors({ origin: process.env.CORS_ORIGIN || `http://localhost:${port}` }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const allowedOrigins = getAllowedOrigins();
+    const isAllowed = allowedOrigins.includes(origin)
+      || allowedOrigins.some((allowed) => allowed.includes('render.com') && origin.endsWith('.onrender.com'))
+      || allowedOrigins.some((allowed) => allowed.includes('localhost') && /^http:\/\/localhost:\d+$/.test(origin));
+
+    if (isAllowed) return callback(null, true);
+    callback(new Error('CORS_ORIGIN_NOT_ALLOWED'));
+  }
+}));
 app.use(express.json({ limit: '16kb' }));
 app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false }));
 
