@@ -26,6 +26,7 @@
     <meta name="twitter:card" content="summary">
 
     <link rel="icon" type="image/png" href="/assets/mediadrop-logo.png">
+    <link rel="manifest" href="/manifest.webmanifest">
     <link rel="canonical" href="https://mediadrop-wth8.onrender.com/">
 
     <!-- Stylesheets -->
@@ -60,7 +61,7 @@
                 class="icon-button theme-toggle"
                 id="theme-toggle"
                 type="button"
-                aria-label="Switch theme"
+                aria-label="Open theme studio"
             >
                 <span>Switch theme</span>
                 <span class="theme-icon" aria-hidden="true">☼</span>
@@ -155,6 +156,11 @@
 
                     </div>
 
+                    <div id="platform-hint" class="platform-hint" aria-live="polite">
+                        <span class="hint-dot"></span>
+                        <span>Paste a link to detect its platform</span>
+                    </div>
+
                     <p
                         id="form-error"
                         class="form-error"
@@ -163,13 +169,15 @@
 
 
                     <!-- Download Button -->
-                    <button
-                        class="primary-button"
-                        type="submit"
-                    >
-                        <span>Download</span>
-                        <span class="button-arrow">↗</span>
-                    </button>
+                    <div class="form-actions">
+                        <button class="primary-button" type="submit">
+                            <span>Analyze media</span>
+                            <span class="button-arrow">↗</span>
+                        </button>
+                        <button id="queue-button" class="secondary-button" type="button">
+                            <span>＋</span> Add to queue
+                        </button>
+                    </div>
 
                 </form>
 
@@ -240,6 +248,35 @@
 
         </section>
 
+        <section id="toolbox" class="toolbox-section" aria-label="Media toolbox">
+            <div class="toolbox-header">
+                <div>
+                    <p class="eyebrow">YOUR MEDIA DESK</p>
+                    <h2>Keep your <em>flow.</em></h2>
+                </div>
+            </div>
+            <div class="toolbox-grid">
+                <article class="toolbox-panel queue-panel">
+                    <div class="panel-heading"><div><span class="panel-kicker">BATCH PROCESSING</span><h3>Download queue</h3></div><span id="queue-count" class="panel-count">0</span></div>
+                    <div id="queue-list" class="queue-list"><p class="empty-state">Your queue is empty. Add links above to line them up.</p></div>
+                    <button id="clear-queue" class="text-button" type="button">Clear queue</button>
+                </article>
+                <article class="toolbox-panel history-panel">
+                    <div class="panel-heading"><div><span class="panel-kicker">LOCAL LIBRARY</span><h3>Recent media</h3></div><button id="clear-history" class="text-button" type="button">Clear</button></div>
+                    <div id="history-list" class="history-list"><p class="empty-state">Analyzed links will appear here.</p></div>
+                </article>
+            </div>
+            <div class="lab-strip">
+                <div class="lab-intro"><span class="panel-kicker">MEDIADROP LABS</span><h3>More room for your <em>flow.</em></h3><p>Power tools for moving media between screens, files, and ideas.</p></div>
+                <div class="lab-actions">
+                    <button class="lab-action" id="qr-button" type="button"><span>▦</span><strong>QR / phone</strong><small>Share this link</small></button>
+                    <button class="lab-action" id="locker-button" type="button"><span>⌕</span><strong>Search library</strong><small><span id="locker-count">0</span> saved items</small></button>
+                    <button class="lab-action live-stat-card" id="stats-button" type="button"><span>◒</span><strong>Statistics</strong><small><span id="stats-downloads">0</span> downloads logged</small></button>
+                    <div class="lab-action connection-lab-card"><span class="panel-kicker">CONNECTION</span><strong><span class="connection-dot" aria-hidden="true">●</span> <span id="connection-status">Checking connection...</span></strong><small id="connection-detail">Latency and storage are measured locally.</small></div>
+                </div>
+            </div>
+        </section>
+
 
         <!-- ====================================
              RESULT SECTION
@@ -281,8 +318,8 @@
                     </span>
 
                 </div>
-
             </div>
+            <div class="download-timeline"><span class="active">Analyzing</span><span>Finding media</span><span>Preparing</span><span>Downloading</span><span>Complete</span></div>
 
 
             <!-- Download Result -->
@@ -292,6 +329,10 @@
             ></div>
 
         </section>
+
+        <div id="feature-modal" class="feature-modal hidden" role="dialog" aria-modal="true" aria-labelledby="feature-modal-title">
+            <div class="feature-dialog"><button id="feature-close" class="modal-close" type="button" aria-label="Close">×</button><span class="panel-kicker" id="feature-modal-kicker">MEDIADROP LABS</span><h2 id="feature-modal-title">Your media desk</h2><div id="feature-modal-body"></div></div>
+        </div>
 
 
         <!-- ====================================

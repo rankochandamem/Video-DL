@@ -1,0 +1,13 @@
+{
+  "name": "MediaDrop",
+  "short_name": "MediaDrop",
+  "description": "Public media downloader and workspace",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f5ef",
+  "theme_color": "#c7f36b",
+  "icons": [
+    { "src": "/assets/mediadrop-logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/mediadrop-logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
