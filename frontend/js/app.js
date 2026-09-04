@@ -12,9 +12,10 @@ const themeToggle = document.querySelector('#theme-toggle');
 const platformNames = { direct: 'Direct media', youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', twitter: 'X / Twitter', tiktok: 'TikTok' };
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const themeIcon = themeToggle.querySelector('.theme-icon');
 if (localStorage.getItem('mediadrop-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
-themeToggle.addEventListener('click', () => { const dark = document.documentElement.dataset.theme !== 'dark'; document.documentElement.dataset.theme = dark ? 'dark' : ''; localStorage.setItem('mediadrop-theme', dark ? 'dark' : 'light'); themeToggle.textContent = dark ? '☾' : '☼'; });
-if (document.documentElement.dataset.theme === 'dark') themeToggle.textContent = '☾';
+themeToggle.addEventListener('click', () => { const dark = document.documentElement.dataset.theme !== 'dark'; document.documentElement.dataset.theme = dark ? 'dark' : ''; localStorage.setItem('mediadrop-theme', dark ? 'dark' : 'light'); themeIcon.textContent = dark ? '☾' : '☼'; });
+if (document.documentElement.dataset.theme === 'dark') themeIcon.textContent = '☾';
 
 pasteButton.addEventListener('click', async () => { try { input.value = await navigator.clipboard.readText(); input.focus(); } catch { input.focus(); } });
 clearButton.addEventListener('click', () => { input.value = ''; formError.textContent = ''; input.focus(); });
