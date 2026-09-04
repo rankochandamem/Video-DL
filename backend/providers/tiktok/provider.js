@@ -13,12 +13,10 @@ async function getMediaInfo(url) {
 		try {
 			const response = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
 			if (!response.ok) throw new Error('PROVIDER_UNAVAILABLE');
-			const metadata = await response.json();
-			return {
-				platform: 'tiktok', type: 'video', title: metadata.title || 'TikTok video',
-				thumbnail: metadata.thumbnail_url || null, preview: null, duration: null, formats: []
-			};
-		} catch {
+			await response.json();
+			throw new Error('TIKTOK_FORMATS_UNAVAILABLE');
+		} catch (error) {
+			if (error.message === 'TIKTOK_FORMATS_UNAVAILABLE') throw error;
 			throw new Error('PROVIDER_UNAVAILABLE');
 		}
 	}
