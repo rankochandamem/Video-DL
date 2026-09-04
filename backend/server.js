@@ -15,7 +15,7 @@ const providers = [
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const host = process.env.HOST || 'localhost';
+const host = process.env.HOST || '0.0.0.0';
 const maxFileSize = Number(process.env.MAX_FILE_SIZE_MB || 500) * 1024 * 1024;
 const maxConcurrent = Number(process.env.MAX_CONCURRENT_DOWNLOADS || 3);
 let activeDownloads = 0;
@@ -168,6 +168,6 @@ app.post('/api/media/cancel', (_req, res) => res.json({ success: true }));
 
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
-app.listen(port, '127.0.0.1', () => {
-  console.log(`MediaDrop running at http://localhost:${port}/`);
+app.listen(port, host, () => {
+  console.log(`MediaDrop running on port ${port}`);
 });
