@@ -23,16 +23,22 @@ let activeDownloads = 0;
 function getAllowedOrigins() {
   const configuredOrigins = (process.env.CORS_ORIGIN || '')
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
+  const renderOrigin = process.env.RENDER_EXTERNAL_HOSTNAME
+    ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+    : null;
 
   return [...new Set([
     `http://localhost:${port}`,
+    'http://localhost:3000',
     `http://127.0.0.1:${port}`,
+    'http://127.0.0.1:3000',
     `http://localhost:3001`,
     `http://127.0.0.1:3001`,
+    renderOrigin,
     ...configuredOrigins
-  ])];
+  ].filter(Boolean))];
 }
 
 app.use(helmet({
@@ -55,6 +61,8 @@ app.use(cors({
       || allowedOrigins.some((allowed) => allowed.includes('localhost') && /^http:\/\/localhost:\d+$/.test(origin));
 
     if (isAllowed) return callback(null, true);
+    console.warn('CORS blocked origin:', origin);
+    console.warn('Allowed origins:', allowedOrigins);
     callback(new Error('CORS_ORIGIN_NOT_ALLOWED'));
   }
 }));
