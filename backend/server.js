@@ -204,6 +204,11 @@ app.post('/api/media/download', async (req, res) => {
 });
 app.post('/api/media/cancel', (_req, res) => res.json({ success: true }));
 
+app.use('/api', (_req, res) => res.status(404).json({
+  success: false,
+  error: 'API route not found',
+  message: 'The requested API endpoint does not exist.'
+}));
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
 app.listen(port, host, () => {
