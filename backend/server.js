@@ -250,6 +250,14 @@ app.use((error, req, res, next) => {
   }
   res.status(500).send('MediaDrop server error');
 });
-app.listen(port, host, () => {
+const server = app.listen(port, host, () => {
   console.log(`MediaDrop running on ${host}:${port}`);
 });
+
+function shutdown() {
+  server.close(() => process.exit(0));
+  server.closeAllConnections?.();
+}
+
+process.once('SIGTERM', shutdown);
+process.once('SIGINT', shutdown);
