@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MediaDrop - Public Video, Reel, Short & Image Downloader</title>
+
+    <meta
+        name="description"
+        content="Download and preview supported public videos, Reels, Shorts and images by pasting a media URL. No account required."
+    >
+
+    <meta property="og:title" content="MediaDrop - Public Media Downloader">
+    <meta
+        property="og:description"
+        content="Preview supported public media, then download an available format."
+    >
+
+    <meta name="twitter:card" content="summary">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/logos.css">
+</head>
+
+<body>
+
+    <!-- ========================================
+         HEADER
+    ========================================= -->
+    <header class="site-header">
+
+        <a
+            class="brand"
+            href="#top"
+            aria-label="MediaDrop home"
+        >
+            <span class="brand-mark">M</span>
+
+            <span>
+                Media<span>Drop</span>
+            </span>
+        </a>
+
+        <nav class="desktop-nav">
+            <a href="#how-it-works">How it works</a>
+            <a href="#platforms">Platforms</a>
+            <a href="#faq">FAQ</a>
+        </nav>
+
+        <div class="header-actions">
+
+            <button
+                class="icon-button"
+                id="theme-toggle"
+                type="button"
+                aria-label="Switch theme"
+            >
+                ☼
+            </button>
+
+            <button
+                class="menu-button"
+                id="menu-toggle"
+                type="button"
+                aria-label="Open menu"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ========================================
+         MAIN CONTENT
+    ========================================= -->
+    <main id="top">
+
+
+        <!-- ====================================
+             HERO SECTION
+        ===================================== -->
+        <section class="hero">
+
+            <div class="hero-copy">
+
+                <p class="eyebrow">
+                    PUBLIC MEDIA, MADE SIMPLE
+                    <span></span>
+                </p>
+
+                <h1>
+                    Bring the link.<br>
+                    <em>Keep the moment.</em>
+                </h1>
+
+                <p class="hero-subtitle">
+                    Preview supported public videos, reels and shorts,
+                    then download an available format or export a transcript
+                    when captions are available.
+                </p>
+
+
+                <!-- Download Form -->
+                <form
+                    id="download-form"
+                    class="download-form"
+                >
+
+                    <label for="media-url">
+                        Media URL
+                    </label>
+
+                    <div class="input-wrap">
+
+                        <span class="link-icon">
+                            ↗
+                        </span>
+
+                        <input
+                            id="media-url"
+                            type="url"
+                            placeholder="Paste a YouTube, Instagram, or media URL..."
+                            autocomplete="url"
+                        >
+
+                        <button
+                            id="paste-button"
+                            class="paste-button"
+                            type="button"
+                        >
+                            Paste
+                        </button>
+
+                        <button
+                            id="clear-button"
+                            class="clear-button"
+                            type="button"
+                            aria-label="Clear URL"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+                    <p
+                        id="form-error"
+                        class="form-error"
+                        role="alert"
+                    ></p>
+
+
+                    <!-- Download Button -->
+                    <button
+                        class="primary-button"
+                        type="submit"
+                    >
+                        <span>Download</span>
+                        <span class="button-arrow">↗</span>
+                    </button>
+
+                </form>
+
+
+                <!-- Trust Information -->
+                <div class="trust-line">
+
+                    <span>
+                        ✓ No account required
+                    </span>
+
+                    <span>
+                        ✓ Direct, honest results
+                    </span>
+
+                </div>
+
+                <p class="responsible">
+                    Only download content you own or have permission to download.
+                </p>
+
+            </div>
+
+
+            <!-- Hero Graphic -->
+            <div
+                class="hero-art"
+                aria-hidden="true"
+            >
+
+                <div class="orbit orbit-one"></div>
+                <div class="orbit orbit-two"></div>
+
+                <div class="signal-card">
+
+                    <span class="signal-dot"></span>
+
+                    <span>
+                        Ready when you are
+                    </span>
+
+                    <strong>
+                        Paste a link<br>
+                        to begin
+                    </strong>
+
+                    <div class="signal-wave">
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                    </div>
+
+                </div>
+
+                <div class="floating-label label-top">
+                    PUBLIC LINK
+                </div>
+
+                <div class="floating-label label-bottom">
+                    NO LOGIN NEEDED
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ====================================
+             RESULT SECTION
+        ===================================== -->
+        <section
+            id="result-section"
+            class="result-section hidden"
+            aria-live="polite"
+        >
+
+            <!-- Processing Panel -->
+            <div
+                id="processing"
+                class="processing-panel hidden"
+            >
+
+                <div class="processing-head">
+
+                    <span class="spinner"></span>
+
+                    <span id="processing-title">
+                        Detecting platform...
+                    </span>
+
+                </div>
+
+                <div class="processing-steps">
+
+                    <span class="active">
+                        01 Detect
+                    </span>
+
+                    <span>
+                        02 Check
+                    </span>
+
+                    <span>
+                        03 Prepare
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Download Result -->
+            <div
+                id="result"
+                class="result-grid"
+            ></div>
+
+        </section>
+
+
+        <!-- ====================================
+             HOW IT WORKS
+        ===================================== -->
+        <section
+            id="how-it-works"
+            class="section how-section"
+        >
+
+            <div class="section-intro">
+
+                <p class="eyebrow">
+                    THE SHORT VERSION
+                </p>
+
+                <h2>
+                    From link to<br>
+                    <em>download.</em>
+                </h2>
+
+            </div>
+
+
+            <div class="steps">
+
+                <article>
+
+                    <span>01</span>
+
+                    <h3>
+                        Copy link
+                    </h3>
+
+                    <p>
+                        Copy the URL of public media you are
+                        authorized to download.
+                    </p>
+
+                </article>
+
+
+                <article>
+
+                    <span>02</span>
+
+                    <h3>
+                        Paste here
+                    </h3>
+
+                    <p>
+                        Drop it into MediaDrop. We identify
+                        the source and available media.
+                    </p>
+
+                </article>
+
+
+                <article>
+
+                    <span>03</span>
+
+                    <h3>
+                        Preview & download
+                    </h3>
+
+                    <p>
+                        Inspect the result, choose a verified
+                        format, and save it. For supported videos,
+                        you can also download a transcript when captions
+                        are available.
+                    </p>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- ====================================
+             PLATFORMS
+        ===================================== -->
+        <section
+            id="platforms"
+            class="section platforms-section"
+        >
+
+            <div class="section-intro wide">
+
+                <p class="eyebrow">
+                    WHAT WE RECOGNIZE
+                </p>
+
+                <h2>
+                    Made for the places<br>
+                    you already <em>share.</em>
+                </h2>
+
+                <p>
+                    Availability depends on the URL and each
+                    platform's restrictions. We never pretend
+                    an unavailable source worked.
+                </p>
+
+            </div>
+
+
+            <div class="platform-grid">
+
+
+                <!-- YouTube -->
+                <div class="platform-card">
+
+                    <b class="platform-letter yt">
+
+                        <img
+                            src="https://cdn.simpleicons.org/youtube/FF0000"
+                            alt="YouTube logo"
+                        >
+
+                    </b>
+
+                    <div>
+
+                        <h3>
+                            YouTube
+                        </h3>
+
+                        <p>
+                            Videos · Shorts
+                        </p>
+
+                    </div>
+
+                    <span>↗</span>
+
+                </div>
+
+
+                <!-- Instagram -->
+                <div class="platform-card">
+
+                    <b class="platform-letter ig">
+
+                        <img
+                            src="https://cdn.simpleicons.org/instagram/E4405F"
+                            alt="Instagram logo"
+                        >
+
+                    </b>
+
+                    <div>
+
+                        <h3>
+                            Instagram
+                        </h3>
+
+                        <p>
+                            Videos · Reels
+                        </p>
+
+                    </div>
+
+                    <span>↗</span>
+
+                </div>
+
+
+                <!-- Facebook -->
+                <div class="platform-card">
+
+                    <b class="platform-letter fb">
+
+                        <img
+                            src="https://cdn.simpleicons.org/facebook/1877F2"
+                            alt="Facebook logo"
+                        >
+
+                    </b>
+
+                    <div>
+
+                        <h3>
+                            Facebook
+                        </h3>
+
+                        <p>
+                            Videos · Reels
+                        </p>
+
+                    </div>
+
+                    <span>↗</span>
+
+                </div>
+
+
+                <!-- X / Twitter -->
+                <div class="platform-card">
+
+                    <b class="platform-letter x">
+
+                        <img
+                            src="https://cdn.simpleicons.org/x/000000"
+                            alt="X logo"
+                        >
+
+                    </b>
+
+                    <div>
+
+                        <h3>
+                            X / Twitter
+                        </h3>
+
+                        <p>
+                            Videos · Images
+                        </p>
+
+                    </div>
+
+                    <span>↗</span>
+
+                </div>
+
+
+                <!-- TikTok -->
+                <div class="platform-card">
+
+                    <b class="platform-letter tt">
+
+                        <img
+                            src="https://cdn.simpleicons.org/tiktok/000000"
+                            alt="TikTok logo"
+                        >
+
+                    </b>
+
+                    <div>
+
+                        <h3>
+                            TikTok
+                        </h3>
+
+                        <p>
+                            Videos
+                        </p>
+
+                    </div>
+
+                    <span>↗</span>
+
+                </div>
+
+
+                <!-- Direct Media -->
+                <div class="platform-card direct-card">
+
+                    <b class="platform-letter direct">
+                        ↗
+                    </b>
+
+                    <div>
+
+                        <h3>
+                            Direct media
+                        </h3>
+
+                        <p>
+                            MP4 · JPG · PNG · WebM
+                        </p>
+
+                    </div>
+
+                    <span>↗</span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ====================================
+             FAQ
+        ===================================== -->
+        <section
+            id="faq"
+            class="section faq-section"
+        >
+
+            <div class="section-intro">
+
+                <p class="eyebrow">
+                    GOOD TO KNOW
+                </p>
+
+                <h2>
+                    Questions,<br>
+                    <em>answered.</em>
+                </h2>
+
+            </div>
+
+
+            <div class="faq-list">
+
+
+                <!-- FAQ 1 -->
+                <details open>
+
+                    <summary>
+                        Do I need an account?
+                        <span>+</span>
+                    </summary>
+
+                    <p>
+                        No. MediaDrop is ready to use without
+                        an account, login, email, or subscription.
+                    </p>
+
+                </details>
+
+
+                <!-- FAQ 2 -->
+                <details>
+
+                    <summary>
+                        Can I download any public video?
+                        <span>+</span>
+                    </summary>
+
+                    <p>
+                        Not necessarily. Public visibility does
+                        not guarantee automated downloading.
+                        We only process supported URLs through
+                        permitted methods.
+                    </p>
+
+                </details>
+
+
+                <!-- FAQ 3 -->
+                <details>
+
+                    <summary>
+                        Can I preview a video first?
+                        <span>+</span>
+                    </summary>
+
+                    <p>
+                        Yes, when a browser-playable preview source
+                        is legitimately available. Otherwise, you
+                        will see a clear preview-unavailable message.
+                    </p>
+
+                </details>
+
+
+                <!-- FAQ 4 -->
+                <details>
+
+                    <summary>
+                        Can I download a transcript?
+                        <span>+</span>
+                    </summary>
+
+                    <p>
+                        Yes, for supported videos with available subtitles
+                        or captions. MediaDrop will surface a transcript
+                        download when the source provides one and the content
+                        is accessible.
+                    </p>
+
+                </details>
+
+
+                <!-- FAQ 5 -->
+                <details>
+
+                    <summary>
+                        Does MediaDrop bypass access controls?
+                        <span>+</span>
+                    </summary>
+
+                    <p>
+                        No. Private content, DRM, paywalls, CAPTCHA,
+                        logins, and other access controls are never bypassed.
+                    </p>
+
+                </details>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ========================================
+         FOOTER
+    ========================================= -->
+    <footer class="site-footer">
+
+        <div class="footer-brand">
+
+            <a
+                class="brand"
+                href="#top"
+            >
+                <span class="brand-mark">
+                    M
+                </span>
+
+                <span>
+                    Media<span>Drop</span>
+                </span>
+            </a>
+
+            <p>
+                Public media downloader.
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <a href="#how-it-works">
+                How it works
+            </a>
+
+            <a href="#platforms">
+                Platforms
+            </a>
+
+            <a href="#faq">
+                FAQ
+            </a>
+
+            <a href="#top">
+                Privacy
+            </a>
+
+            <a href="#top">
+                Terms
+            </a>
+
+        </div>
+
+
+        <p class="footer-note">
+            MediaDrop is intended for content you own or have permission
+            to download. It does not bypass private access, DRM, paywalls,
+            CAPTCHA, or other access controls.
+        </p>
+
+
+        <div class="footer-bottom">
+
+            <span>
+                © 2026 MediaDrop
+            </span>
+
+            <span>
+                Built for responsible sharing
+            </span>
+
+        </div>
+
+    </footer>
+
+
+    <!-- ========================================
+         INLINE RESULT STYLES
+    ========================================= -->
+    <style>
+
+        .result-grid {
+            animation: result-in 0.45s ease both;
+        }
+
+        .format-row {
+            transition:
+                background 0.25s ease,
+                transform 0.25s ease;
+        }
+
+        .format-row:hover {
+            background: var(--warm);
+            transform: translateX(3px);
+        }
+
+        .download-format,
+        .new-link,
+        .primary-button {
+            transition:
+                transform 0.2s ease,
+                background 0.2s ease,
+                opacity 0.2s ease;
+        }
+
+        .download-format:active,
+        .new-link:active,
+        .primary-button:active {
+            transform: scale(0.97);
+        }
+
+        .progress-bar {
+            transition: width 0.35s ease;
+        }
+
+        .source-meta {
+            animation: meta-in 0.5s 0.1s ease both;
+        }
+
+
+        /* Result animation */
+        @keyframes result-in {
+
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        /* Metadata animation */
+        @keyframes meta-in {
+
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        /* Format rows */
+        .format-row {
+            border-top: 1px solid var(--line);
+            padding: 16px 0;
+
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+
+            gap: 14px;
+        }
+
+        .format-row > div:first-child {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .format-row strong {
+            font-size: 14px;
+            line-height: 1.35;
+        }
+
+        .format-row small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+
+        /* Download buttons */
+        .download-format,
+        .download-transcript {
+            background: #101615;
+            color: #fff;
+
+            border: 1px solid #101615;
+            border-radius: 8px;
+
+            padding: 10px 16px;
+
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .download-format:hover,
+        .download-transcript:hover {
+            background: #1a211f;
+        }
+
+
+        /* Transcript */
+        .transcript-row {
+            align-items: center;
+        }
+
+        .transcript-copy {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .transcript-copy strong {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .transcript-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+        }
+
+    </style>
+
+
+    <!-- ========================================
+         JAVASCRIPT
+    ========================================= -->
+    <script src="/js/app.js" defer></script>
+
+</body>
+</html>

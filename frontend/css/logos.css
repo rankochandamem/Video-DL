@@ -1,0 +1,14 @@
+.platform-letter.yt,
+.platform-letter.ig,
+.platform-letter.fb,
+.platform-letter.x,
+.platform-letter.tt {
+  background: transparent;
+}
+
+.platform-letter img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
