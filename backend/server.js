@@ -124,7 +124,16 @@ app.get('/api/media/preview', async (req, res) => {
     const provider = findProvider(url);
     if (!provider || !provider.download) throw new Error('PROVIDER_UNAVAILABLE');
     const source = provider.getPreview ? await provider.getPreview(url, req.query.formatId) : await provider.download(url, req.query.formatId);
-    if (source.filePath) throw new Error('MEDIA_UNAVAILABLE');
+    if (source.filePath) {
+      const fileStats = await fs.promises.stat(source.filePath);
+      res.setHeader('Content-Type', source.contentType || 'video/mp4');
+      res.setHeader('Content-Length', fileStats.size);
+      const cleanup = () => fs.promises.unlink(source.filePath).catch(() => {});
+      res.once('close', cleanup);
+      res.once('finish', cleanup);
+      fs.createReadStream(source.filePath).on('error', cleanup).pipe(res);
+      return;
+    }
     const headers = req.headers.range ? { Range: req.headers.range } : {};
     const upstream = await fetchWithTimeout(source.url, { headers });
     if (!upstream.ok || !upstream.body) throw new Error('MEDIA_UNAVAILABLE');

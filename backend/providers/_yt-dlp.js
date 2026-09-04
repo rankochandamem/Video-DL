@@ -173,9 +173,13 @@ async function getMediaInfo(url, platform) {
   }));
   const transcript = getCaptionSource(info);
   if (!formats.length) throw new Error('PROVIDER_UNAVAILABLE');
+  const previewFormat = formats.find((format) => format.hasAudio && /x360|x240|x144/.test(format.quality))
+    || formats.find((format) => format.hasAudio)
+    || formats.find((format) => /x360|x240|x144/.test(format.quality))
+    || formats.at(-1);
   if (ffmpegPath) formats.push({ id: 'social-mp3', quality: 'Audio only', extension: 'mp3', size: 'Size calculated during conversion', mimeType: 'audio/mpeg' });
-  const preview = formats.find((format) => format.hasAudio && /x360|x240|x144/.test(format.quality)) || formats.find((format) => format.hasAudio);
-  return { platform, type: 'video', title: info.title || `${platform} video`, thumbnail: info.thumbnail || null, preview: preview?.url || null, duration: info.duration || null, formats, transcriptAvailable: Boolean(transcript), transcriptLanguage: transcript?.language || null };
+  const previewUrl = previewFormat.hasAudio ? previewFormat.url : `/api/media/preview?url=${encodeURIComponent(url)}&formatId=${encodeURIComponent(previewFormat.id)}`;
+  return { platform, type: 'video', title: info.title || `${platform} video`, thumbnail: info.thumbnail || null, preview: previewUrl, duration: info.duration || null, formats, transcriptAvailable: Boolean(transcript), transcriptLanguage: transcript?.language || null };
 }
 
 async function readRemoteSize(url) {
@@ -190,8 +194,10 @@ async function readRemoteSize(url) {
 
 async function getPreview(url, formatId) {
   const info = await loadInfo(url);
-  const format = formatsFor(info).find((item) => item.id === formatId) || formatsFor(info)[0];
+  const formats = formatsFor(info);
+  const format = formats.find((item) => item.id === formatId) || formats[0];
   if (!format) throw new Error('MEDIA_UNAVAILABLE');
+  if (!format.hasAudio && ffmpegPath) return convert(url, 'mp4', format.sourceFormatId || formatId, info.id);
   return { url: format.url, contentType: format.mimeType };
 }
 
