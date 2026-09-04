@@ -141,7 +141,16 @@ app.post('/api/media/info', async (req, res) => {
     }
     const info = await provider.getMediaInfo(url, { fetchWithTimeout, maxFileSize });
     res.json({ success: true, url, ...info });
-  } catch (error) { const result = errorResponse(error); res.status(result.status).json(result.body); }
+  } catch (error) {
+    console.error('MEDIA INFO ERROR:', {
+      message: error?.message,
+      stack: error?.stack,
+      url: req.body?.url
+    });
+
+    const result = errorResponse(error);
+    res.status(result.status).json(result.body);
+  }
 });
 
 app.post('/api/media/transcript', async (req, res) => {
@@ -211,6 +220,24 @@ app.use('/api', (_req, res) => res.status(404).json({
 }));
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
+app.use((error, req, res, next) => {
+  console.error('MediaDrop server error:', {
+    message: error?.message,
+    stack: error?.stack,
+    method: req.method,
+    path: req.path
+  });
+
+  if (res.headersSent) return next(error);
+  if (req.path.startsWith('/api/')) {
+    return res.status(500).json({
+      success: false,
+      error: 'Service unavailable',
+      message: 'MediaDrop encountered an internal server error. Please try again.'
+    });
+  }
+  res.status(500).send('MediaDrop server error');
+});
 app.listen(port, host, () => {
-  console.log(`MediaDrop running on port ${port}`);
+  console.log(`MediaDrop running on ${host}:${port}`);
 });
