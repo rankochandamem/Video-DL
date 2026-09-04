@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "lib": ["ES2022"],
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true
+  },
+  "include": [
+    "backend/**/*.js",
+    "scripts/**/*.js",
+    "vite.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "frontend"
+  ]
+}
