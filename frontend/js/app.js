@@ -50,6 +50,10 @@ directMediaCard.addEventListener('keydown', (event) => { if (event.key === 'Ente
 const tiktokCard = document.querySelector('.platform-card.unavailable');
 tiktokCard.addEventListener('click', openTikTokUnavailable);
 tiktokCard.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openTikTokUnavailable(); } });
+document.querySelectorAll('.platform-info-card').forEach((card) => {
+  card.addEventListener('click', () => openPlatformInfo(card.dataset.platform));
+  card.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPlatformInfo(card.dataset.platform); } });
+});
 
 pasteButton.addEventListener('click', async () => {
   try {
@@ -476,6 +480,16 @@ function openDirectMediaExamples() {
 }
 function openTikTokUnavailable() {
   openFeatureModal('TikTok is not available', 'IN DEVELOPMENT', '<div class="unavailable-message"><span class="platform-warning">!</span><p>The developer is working on TikTok support.</p></div>');
+}
+function openPlatformInfo(platform) {
+  const details = {
+    youtube: ['YouTube formats', 'SHORTS', 'YouTube exposes Shorts and other public video formats differently from regular downloadable files. This app can only offer what YouTube makes available for that link.'],
+    instagram: ['Instagram formats', 'REELS', 'Instagram links can expose Reels or videos, depending on the post and its public access settings.'],
+    facebook: ['Facebook formats', 'VIDEOS AND REELS', 'Facebook controls which public videos and Reels provide downloadable media. Private or restricted posts cannot be accessed.'],
+    twitter: ['X / Twitter formats', 'VIDEOS', 'X / Twitter posts may expose a public video, but images and protected media are not offered as downloadable formats here.']
+  }[platform];
+  if (!details) return;
+  openFeatureModal(details[0], details[1], `<div class="platform-info-message"><p>${details[2]}</p><small>Availability depends on the source app or website.</small></div>`);
 }
 function openFeatureModal(title, kicker, body) { featureModalTitle.textContent = title; featureModalKicker.textContent = kicker; featureModalBody.innerHTML = body; featureModal.classList.remove('hidden'); }
 function closeFeatureModal() { featureModal.classList.add('hidden'); }
