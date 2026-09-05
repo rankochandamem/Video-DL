@@ -69,7 +69,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '16kb' }));
 app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, skip: (req) => req.path === '/speed-test' }));
-const speedTestLimit = rateLimit({ windowMs: 60 * 1000, limit: 6, standardHeaders: true, legacyHeaders: false });
+const speedTestLimit = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
 
 function normalizeUrl(value) {
   if (typeof value !== 'string' || value.length > 2048) throw new Error('INVALID_URL');
