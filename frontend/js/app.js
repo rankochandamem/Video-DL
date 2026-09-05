@@ -30,20 +30,16 @@ window.addEventListener('beforeinstallprompt', (event) => {
   installButton.hidden = false;
 });
 
-function openInstallDialog() {
-  const promptAvailable = Boolean(installPrompt);
-  openFeatureModal('Install MediaDrop', 'ADD TO YOUR DEVICE', `<div class="install-dialog"><p>${promptAvailable ? 'Install MediaDrop for quick access from your desktop or home screen.' : 'Your browser does not offer automatic installation here. Use its menu and choose Install app or Add to Home Screen.'}</p>${promptAvailable ? '<button class="recommendation-button" id="confirm-install" type="button"><span aria-hidden="true">↓</span> Install</button>' : ''}</div>`);
-  if (!promptAvailable) return;
-  document.querySelector('#confirm-install').addEventListener('click', async () => {
-    closeFeatureModal();
-    installPrompt.prompt();
-    await installPrompt.userChoice;
-    installPrompt = null;
-    installButton.hidden = true;
-  });
-}
-
-installButton.addEventListener('click', openInstallDialog);
+installButton.addEventListener('click', async () => {
+  if (!installPrompt) {
+    openFeatureModal('Install MediaDrop', 'ADD TO YOUR DEVICE', '<div class="install-dialog"><p>Your browser does not offer automatic installation here. Use its menu and choose Install app or Add to Home Screen.</p></div>');
+    return;
+  }
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  installButton.hidden = true;
+});
 
 window.addEventListener('appinstalled', () => {
   installPrompt = null;
