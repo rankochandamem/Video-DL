@@ -32,7 +32,11 @@ window.addEventListener('beforeinstallprompt', (event) => {
 
 installButton.addEventListener('click', async () => {
   if (!installPrompt) {
-    openFeatureModal('Install MediaDrop', 'ADD TO YOUR DEVICE', '<div class="install-dialog"><p>Your browser does not offer automatic installation here. Use its menu and choose Install app or Add to Home Screen.</p></div>');
+    const isAppleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const installHelp = isAppleMobile
+      ? 'On iPhone or iPad, tap Share, then choose Add to Home Screen.'
+      : 'Open your browser menu and choose Install app or Add to Home Screen.';
+    openFeatureModal('Install MediaDrop', 'ADD TO YOUR DEVICE', `<div class="install-dialog"><p>${installHelp}</p></div>`);
     return;
   }
   installPrompt.prompt();
