@@ -222,8 +222,7 @@ async function download(url, formatId, options = {}) {
 	if (ffmpegPath && formatId.startsWith('youtube-')) {
 		const outputPath = path.join(os.tmpdir(), `mediadrop-${crypto.randomBytes(12).toString('hex')}.mp4`);
 		try {
-			await runExtractor(url, { format: `${formatId.slice(8)}+bestaudio/best`, output: outputPath, mergeOutputFormat: 'mp4', ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true });
-			await ensureCompatibleAudio(outputPath);
+			await runExtractor(url, { format: `${formatId.slice(8)}+bestaudio[ext=m4a]/bestaudio/best`, output: outputPath, mergeOutputFormat: 'mp4', ffmpegLocation: ffmpegPath, noPlaylist: true, noWarnings: true, concurrentFragments: 4 });
 			return { filePath: outputPath, contentType: 'video/mp4', filename: `mediadrop-${info.id}.mp4` };
 		} catch {
 			throw new Error('PROVIDER_UNAVAILABLE');
