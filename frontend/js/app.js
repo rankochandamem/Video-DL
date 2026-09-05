@@ -21,6 +21,31 @@ const featureModal = document.querySelector('#feature-modal');
 const featureModalBody = document.querySelector('#feature-modal-body');
 const featureModalTitle = document.querySelector('#feature-modal-title');
 const featureModalKicker = document.querySelector('#feature-modal-kicker');
+const installButton = document.querySelector('#install-button');
+let installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  installPrompt = event;
+  installButton.hidden = false;
+});
+
+installButton.addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  installButton.hidden = true;
+});
+
+window.addEventListener('appinstalled', () => {
+  installPrompt = null;
+  installButton.hidden = true;
+});
+
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  installButton.hidden = true;
+}
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {

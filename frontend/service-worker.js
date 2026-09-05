@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mediadrop-shell-v2';
+const CACHE_NAME = 'mediadrop-shell-v3';
 const SHELL = ['/', '/index.html', '/css/style.css', '/css/logos.css', '/js/app.js', '/assets/mediadrop-logo.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
