@@ -29,11 +29,18 @@ const showInstalledState = () => {
   installButton.innerHTML = '<span aria-hidden="true">✓</span> Installed';
   installButton.setAttribute('aria-label', 'MediaDrop is already installed');
   installButton.classList.add('installed');
+  installButton.classList.remove('installing');
 };
 const showInstallState = () => {
   installButton.innerHTML = '<span aria-hidden="true">↓</span> Install MediaDrop';
   installButton.setAttribute('aria-label', 'Install MediaDrop');
   installButton.classList.remove('installed');
+  installButton.classList.remove('installing');
+};
+const showInstallingState = () => {
+  installButton.innerHTML = '<span aria-hidden="true">↓</span> Installing...';
+  installButton.setAttribute('aria-label', 'Installing MediaDrop');
+  installButton.classList.add('installing');
 };
 
 window.addEventListener('beforeinstallprompt', (event) => {
@@ -57,13 +64,14 @@ installButton.addEventListener('click', async () => {
     openFeatureModal('Install MediaDrop', 'ADD TO YOUR DEVICE', `<div class="install-dialog"><p>${installHelp}</p></div>`);
     return;
   }
+  showInstallingState();
   installPrompt.prompt();
   const choice = await installPrompt.userChoice;
   installPrompt = null;
   if (choice.outcome === 'accepted') {
     localStorage.setItem(installStateKey, 'true');
     showInstalledState();
-  }
+  } else showInstallState();
 });
 
 window.addEventListener('appinstalled', () => {
