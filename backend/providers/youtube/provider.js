@@ -22,17 +22,21 @@ function extractorOptions(options = {}) {
 	};
 }
 
-function availableFormats(info) {
+function availableFormats(info, maxFileSize = 0) {
 	const bestAudio = (info.formats || [])
 		.filter((format) => format.url && format.protocol === 'https' && format.vcodec === 'none' && format.acodec !== 'none')
 		.sort((left, right) => Number(right.abr || 0) - Number(left.abr || 0))[0];
 	return (info.formats || [])
 		.filter((format) => format.url && format.protocol === 'https' && format.vcodec !== 'none' && ['mp4', 'webm'].includes(format.ext))
-		.map((format) => ({
-			id: `youtube-${format.format_id}`, quality: `${format.resolution || format.format_note || 'Original'}${ffmpegPath && format.acodec === 'none' ? '' : format.acodec === 'none' ? ' (video only)' : ''}`,
-			extension: format.ext, size: Number(format.filesize || format.filesize_approx || 0) + (format.acodec === 'none' ? Number(bestAudio?.filesize || bestAudio?.filesize_approx || 0) : 0) > 0 ? formatBytes(Number(format.filesize || format.filesize_approx || 0) + (format.acodec === 'none' ? Number(bestAudio?.filesize || bestAudio?.filesize_approx || 0) : 0)) : 'Size unavailable',
-			mimeType: format.mime_type || `video/${format.ext}`, url: format.url, hasAudio: format.acodec !== 'none'
-		}))
+		.map((format) => {
+			const estimatedSize = Number(format.filesize || format.filesize_approx || 0) + (format.acodec === 'none' ? Number(bestAudio?.filesize || bestAudio?.filesize_approx || 0) : 0);
+			return {
+				id: `youtube-${format.format_id}`, quality: `${format.resolution || format.format_note || 'Original'}${ffmpegPath && format.acodec === 'none' ? '' : format.acodec === 'none' ? ' (video only)' : ''}`,
+				extension: format.ext, size: estimatedSize > 0 ? formatBytes(estimatedSize) : 'Size unavailable',
+				mimeType: format.mime_type || `video/${format.ext}`, url: format.url, hasAudio: format.acodec !== 'none', estimatedSize
+			};
+		})
+		.filter((format) => !maxFileSize || !format.estimatedSize || format.estimatedSize <= maxFileSize)
 		.sort((left, right) => parseQuality(right.quality) - parseQuality(left.quality));
 }
 
@@ -187,9 +191,9 @@ function formatCueTimestamp(seconds) {
 	return `${minutes}:${String(secs).padStart(2, '0')}`;
 }
 
-async function getMediaInfo(url) {
+async function getMediaInfo(url, options = {}) {
 	const info = await loadInfo(url);
-	const formats = availableFormats(info);
+	const formats = availableFormats(info, options.maxFileSize);
 	const transcript = getCaptionSource(info);
 	if (!formats.length) throw new Error('PROVIDER_UNAVAILABLE');
 	if (ffmpegPath) formats.push({ id: 'youtube-mp3', quality: 'Audio only', extension: 'mp3', size: 'Size calculated during conversion', mimeType: 'audio/mpeg' });
@@ -200,7 +204,7 @@ async function getMediaInfo(url) {
 	};
 }
 
-async function download(url, formatId) {
+async function download(url, formatId, options = {}) {
 	if (formatId === 'youtube-mp3') {
 		if (!ffmpegPath) throw new Error('PROVIDER_UNAVAILABLE');
 		const outputPath = path.join(os.tmpdir(), `mediadrop-${crypto.randomBytes(12).toString('hex')}.mp3`);
@@ -212,7 +216,7 @@ async function download(url, formatId) {
 		}
 	}
 	const info = await loadInfo(url);
-	const format = availableFormats(info).find((item) => item.id === formatId);
+	const format = availableFormats(info, options.maxFileSize).find((item) => item.id === formatId);
 	if (!format) throw new Error('MEDIA_UNAVAILABLE');
 	if (format.hasAudio) return { url: format.url, contentType: format.mimeType, filename: `mediadrop-${info.id}.${format.extension}` };
 	if (ffmpegPath && formatId.startsWith('youtube-')) {

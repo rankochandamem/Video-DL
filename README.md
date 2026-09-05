@@ -38,4 +38,4 @@ Providers live under `backend/providers/<platform>/provider.js` and share `detec
 
 The API validates HTTP(S) URLs, rejects credentials and private/internal destinations, resolves DNS before fetching, applies Helmet/CORS, rate limits API calls, times out upstream requests, caps JSON and media sizes, and limits concurrent streams. Media is streamed and is not stored by default.
 
-Set limits with `.env`: `MAX_FILE_SIZE_MB`, `MAX_CONCURRENT_DOWNLOADS`, and `CORS_ORIGIN`.
+Set limits with `.env`: `MAX_FILE_SIZE_MB` (default `2048`), `MAX_CONCURRENT_DOWNLOADS`, and `CORS_ORIGIN`.
