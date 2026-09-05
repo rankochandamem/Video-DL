@@ -23,6 +23,12 @@ const featureModalTitle = document.querySelector('#feature-modal-title');
 const featureModalKicker = document.querySelector('#feature-modal-kicker');
 const installButton = document.querySelector('#install-button');
 let installPrompt = null;
+const isInstalledApp = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const showInstalledState = () => {
+  installButton.innerHTML = '<span aria-hidden="true">✓</span> Installed';
+  installButton.setAttribute('aria-label', 'MediaDrop is already installed');
+  installButton.classList.add('installed');
+};
 
 window.addEventListener('beforeinstallprompt', (event) => {
   event.preventDefault();
@@ -31,6 +37,10 @@ window.addEventListener('beforeinstallprompt', (event) => {
 });
 
 installButton.addEventListener('click', async () => {
+  if (isInstalledApp()) {
+    openFeatureModal('MediaDrop is already installed', 'INSTALL COMPLETE', '<div class="install-dialog"><p>You already installed MediaDrop on this device.</p></div>');
+    return;
+  }
   if (!installPrompt) {
     const isAppleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const installHelp = isAppleMobile
@@ -40,19 +50,17 @@ installButton.addEventListener('click', async () => {
     return;
   }
   installPrompt.prompt();
-  await installPrompt.userChoice;
+  const choice = await installPrompt.userChoice;
   installPrompt = null;
-  installButton.hidden = true;
+  if (choice.outcome === 'accepted') showInstalledState();
 });
 
 window.addEventListener('appinstalled', () => {
   installPrompt = null;
-  installButton.hidden = true;
+  showInstalledState();
 });
 
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-  installButton.hidden = true;
-}
+if (isInstalledApp()) showInstalledState();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
