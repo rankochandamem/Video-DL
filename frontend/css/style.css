@@ -22,6 +22,7 @@
 .footer-note-row{display:flex;align-items:center;justify-content:space-between;gap:28px}.footer-note-row .footer-note{margin:0}.footer-note-row .install-button{flex:0 0 auto}@media(max-width:600px){.footer-note-row{align-items:flex-start;flex-direction:column;gap:18px}}
 .footer-note-row{padding:24px 0;border-top:1px solid rgba(244,245,239,.2);border-bottom:1px solid rgba(244,245,239,.2)}.footer-note-row .footer-note{max-width:560px;line-height:1.7}.site-footer .install-button{background:var(--accent);border-color:var(--accent);color:#171817;box-shadow:0 8px 20px rgba(199,243,107,.12)}.site-footer .install-button:hover{background:#d8ff88;border-color:#d8ff88;color:#171817;transform:translateY(-1px)}
 .footer-brand-top{display:flex;align-items:center;gap:18px}.footer-brand-top .install-button{flex:0 0 auto}@media(max-width:600px){.footer-brand-top{align-items:flex-start;flex-direction:column;gap:14px}}
+.install-dialog{display:grid;gap:20px}.install-dialog p{margin:0;color:var(--muted);line-height:1.7}.install-dialog .recommendation-button{justify-self:start}
 .format-action{display:flex;flex-direction:column;align-items:flex-end;min-width:min(100%, 190px)}.format-action .download-progress-row{width:100%;margin-bottom:8px}.format-action .progress-track{margin:8px 0}
 .format-row{align-items:flex-start}
 .format-row{align-items:flex-start!important}
