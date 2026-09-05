@@ -69,7 +69,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '16kb' }));
 app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, skip: (req) => req.path === '/speed-test' }));
-const speedTestLimit = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
 
 function normalizeUrl(value) {
   if (typeof value !== 'string' || value.length > 2048) throw new Error('INVALID_URL');
@@ -120,12 +119,12 @@ function errorResponse(error) {
 }
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'mediadrop' }));
-app.get('/api/speed-test', speedTestLimit, (_req, res) => {
+app.get('/api/speed-test', (_req, res) => {
   const sample = Buffer.alloc(2 * 1024 * 1024);
   res.set({ 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Content-Type': 'application/octet-stream', 'Content-Length': sample.length });
   res.end(sample);
 });
-app.post('/api/speed-test', speedTestLimit, express.raw({ type: 'application/octet-stream', limit: '1mb' }), (_req, res) => res.json({ success: true }));
+app.post('/api/speed-test', express.raw({ type: 'application/octet-stream', limit: '1mb' }), (_req, res) => res.json({ success: true }));
 app.get('/api/media/preview', async (req, res) => {
   try {
     const url = normalizeUrl(req.query.url);
