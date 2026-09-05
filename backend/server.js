@@ -16,7 +16,7 @@ const providers = [
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '0.0.0.0';
-const maxFileSize = Number(process.env.MAX_FILE_SIZE_MB || 500) * 1024 * 1024;
+const maxFileSize = Number(process.env.MAX_FILE_SIZE_MB || 2048) * 1024 * 1024;
 const maxConcurrent = Number(process.env.MAX_CONCURRENT_DOWNLOADS || 3);
 let activeDownloads = 0;
 
@@ -197,7 +197,7 @@ app.post('/api/media/download', async (req, res) => {
     let released = false;
     releaseSlot = () => { if (!released) { released = true; activeDownloads -= 1; } };
     res.once('close', releaseSlot);
-    const source = provider.name === 'direct' ? { url, contentType: null, filename: path.basename(new URL(url).pathname) } : await provider.download(url, req.body?.formatId);
+    const source = provider.name === 'direct' ? { url, contentType: null, filename: path.basename(new URL(url).pathname) } : await provider.download(url, req.body?.formatId, { maxFileSize });
     if (source.filePath) {
       const fileStats = await fs.promises.stat(source.filePath);
       if (fileStats.size > maxFileSize) throw new Error('FILE_TOO_LARGE');
