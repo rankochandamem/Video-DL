@@ -124,6 +124,7 @@ app.get('/api/speed-test', (_req, res) => {
   res.set({ 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Content-Type': 'application/octet-stream', 'Content-Length': sample.length });
   res.end(sample);
 });
+app.post('/api/speed-test', express.raw({ type: 'application/octet-stream', limit: '1mb' }), (_req, res) => res.json({ success: true }));
 app.get('/api/media/preview', async (req, res) => {
   try {
     const url = normalizeUrl(req.query.url);
