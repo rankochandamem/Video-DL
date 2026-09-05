@@ -59,6 +59,7 @@ app.use(cors({
     const isAllowed = allowedOrigins.includes(origin)
       || allowedOrigins.some((allowed) => allowed.includes('render.com') && origin.endsWith('.onrender.com'))
       || allowedOrigins.some((allowed) => allowed.includes('localhost') && /^http:\/\/localhost:\d+$/.test(origin))
+      || /^https:\/\/([a-z0-9-]+\.)?trycloudflare\.com$/i.test(origin)
       || /^http:\/\/(192\.168|10|172\.(1[6-9]|2\d|3[0-1]))\.\d+\.\d+:\d+$/.test(origin);
 
     if (isAllowed) return callback(null, true);
