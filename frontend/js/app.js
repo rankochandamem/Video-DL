@@ -42,13 +42,6 @@ if (document.documentElement.dataset.theme === 'dark') themeIcon.textContent = '
 document.querySelector('#qr-button').addEventListener('click', () => openShareTool('QR / continue on phone'));
 document.querySelector('#locker-button').addEventListener('click', openLibrarySearch);
 document.querySelector('#stats-button').addEventListener('click', openStats);
-document.querySelector('#provider-status-button').addEventListener('click', openProviderStatus);
-const localFileInput = document.querySelector('#local-file-input');
-document.querySelector('#inspect-file-button').addEventListener('click', () => localFileInput.click());
-localFileInput.addEventListener('change', () => { const [file] = localFileInput.files || []; if (file) inspectLocalFile(file); localFileInput.value = ''; });
-document.querySelector('#privacy-tool-button').addEventListener('click', () => localFileInput.click());
-document.querySelector('#capability-button').addEventListener('click', openCapabilityMatrix);
-document.querySelector('#prepare-tool-button').addEventListener('click', openPreparationTool);
 document.querySelector('#feature-close').addEventListener('click', closeFeatureModal);
 featureModal.addEventListener('click', (event) => { if (event.target === featureModal) closeFeatureModal(); });
 const directMediaCard = document.querySelector('.direct-card');
@@ -141,12 +134,8 @@ function renderResult(data, url) {
   const details = [['Resolution', data.resolution], ['Aspect ratio', data.aspectRatio], ['Duration', formatMediaDuration(data.duration)], ['File type', data.format || availableFormats[0]?.extension?.toUpperCase()], ['Video codec', data.videoCodec], ['Audio codec', data.audio], ['Frame rate', data.fps], ['Estimated size', data.size]].filter((item) => item[1]);
   const metadataText = details.map(([label, value]) => `${label}: ${value}`).join('\n');
   const detailsMarkup = details.length ? `<div class="media-details"><div class="details-heading"><span>MEDIA INSPECTOR</span><div><button class="copy-metadata" type="button" data-metadata="${escapeAttr(metadataText)}">Copy metadata</button><button class="favorite-button" type="button" aria-label="Save to favorites">☆</button></div></div>${details.map(([label, value]) => `<div class="detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>` : '';
-  const intelligenceMarkup = buildIntelligenceReport(data, availableFormats);
   const filenameTool = '<div class="filename-tool"><label for="smart-filename">FILENAME (Optional)</label><input id="smart-filename" type="text" value="" placeholder="Enter filename"><small>Leave blank to use the source filename.</small></div>';
-  const recommendation = buildRecommendation(availableFormats);
-  const sizeEstimator = buildSizeEstimator(availableFormats);
-  const presets = `<div class="preset-panel"><div><span class="panel-kicker">QUICK CHOICES</span><strong>Choose for the way you are downloading</strong></div><div class="preset-grid"><button class="preset-button" type="button" data-preset="best">Best quality</button><button class="preset-button" type="button" data-preset="mobile">Mobile</button><button class="preset-button" type="button" data-preset="small">Smallest file</button><button class="preset-button" type="button" data-preset="audio">Audio only</button></div><small class="preset-note">Choices use the formats returned by the source. They never bypass provider restrictions.</small></div>`;
-  result.innerHTML = `<div class="media-preview">${data.thumbnail ? `<div class="media-backdrop" style="--media-image:url('${escapeAttr(data.thumbnail)}')"></div>` : ''}<div class="preview-frame">${preview}</div><div class="source-meta"><div class="source-title">${escapeHtml(data.title)}</div><div class="source-platform">${sourceIcon}${escapeHtml(platformNames[data.platform] || data.platform)}<span class="source-menu">⋮</span></div></div>${intelligenceMarkup}${detailsMarkup}<div class="result-tools"><button type="button" class="tool-chip" data-tool="share">▦ QR / phone</button><button type="button" class="tool-chip" data-tool="private">↗ Private link</button><button type="button" class="tool-chip" data-tool="prepare">🎯 Prepare</button></div></div><div class="format-panel"><div class="result-header"><h2 class="result-title">Smart download</h2><span class="result-format-summary">${escapeHtml(formatSummary)}</span></div>${recommendation}${sizeEstimator}${presets}${filenameTool}<div>${formats || '<p class="status-message">No downloadable formats were returned.</p>'}</div>${transcriptButton}</div>`;
+  result.innerHTML = `<div class="media-preview">${data.thumbnail ? `<div class="media-backdrop" style="--media-image:url('${escapeAttr(data.thumbnail)}')"></div>` : ''}<div class="preview-frame">${preview}</div><div class="source-meta"><div class="source-title">${escapeHtml(data.title)}</div><div class="source-platform">${sourceIcon}${escapeHtml(platformNames[data.platform] || data.platform)}<span class="source-menu">⋮</span></div></div>${detailsMarkup}<div class="result-tools"><button type="button" class="tool-chip" data-tool="share">▦ QR / phone</button><button type="button" class="tool-chip" data-tool="private">↗ Private link</button></div></div><div class="format-panel"><div class="result-header"><h2 class="result-title">Download options</h2><span class="result-format-summary">${escapeHtml(formatSummary)}</span></div>${filenameTool}<div>${formats || '<p class="status-message">No downloadable formats were returned.</p>'}</div>${transcriptButton}</div>`;
   const previousItem = getStoredList('mediadrop-history').find((item) => item.url === url);
   if (previousItem) {
     const currentFormat = data.format || availableFormats[0]?.extension?.toUpperCase() || 'Media';
@@ -166,31 +155,11 @@ function renderResult(data, url) {
   }
   result.querySelector('.copy-metadata')?.addEventListener('click', (event) => copyText(event.currentTarget.dataset.metadata, event.currentTarget));
   result.querySelectorAll('.download-format').forEach((button) => { button.onclick = () => downloadMedia(url, button.dataset.id, button); });
-  result.querySelector('.recommendation-button')?.addEventListener('click', (event) => {
-    const target = result.querySelector(`.download-format[data-id="${CSS.escape(event.currentTarget.dataset.recommendationId)}"]`);
-    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.focus(); target.click(); }
-  });
-  result.querySelectorAll('.preset-button').forEach((button) => button.addEventListener('click', () => {
-    if (button.dataset.preset === 'transcript') {
-      const transcriptAction = result.querySelector('.download-transcript');
-      if (transcriptAction) {
-        const transcriptRow = transcriptAction.closest('.transcript-row');
-        transcriptRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        transcriptAction.focus();
-      }
-      return;
-    }
-    const selected = choosePresetFormat(availableFormats, button.dataset.preset);
-    if (!selected) return;
-    const formatButton = result.querySelector(`.download-format[data-id="${CSS.escape(selected.id)}"]`);
-    if (formatButton) { formatButton.scrollIntoView({ behavior: 'smooth', block: 'center' }); formatButton.focus(); }
-  }));
   const transcriptButtonNode = result.querySelector('.download-transcript');
   if (transcriptButtonNode) transcriptButtonNode.addEventListener('click', () => downloadTranscript(url));
   result.querySelectorAll('.tool-chip').forEach((button) => button.addEventListener('click', () => {
     if (button.dataset.tool === 'share') openShareTool('QR / continue on phone', url, data.title);
     if (button.dataset.tool === 'private') openPrivateLink(url, data.title);
-    if (button.dataset.tool === 'prepare') openPreparationTool();
   }));
   const newLinkNode = result.querySelector('.new-link');
   if (newLinkNode) newLinkNode.addEventListener('click', reset);
@@ -352,74 +321,6 @@ async function parseJsonResponse(response) {
     };
   }
 }
-function parseFormatSize(value) {
-  const match = String(value || '').match(/([\d.]+)\s*(B|KB|MB|GB)/i);
-  if (!match) return 0;
-  const units = { b: 1, kb: 1024, mb: 1024 ** 2, gb: 1024 ** 3 };
-  return Number(match[1]) * (units[match[2].toLowerCase()] || 1);
-}
-function formatResolution(format) { return Number(String(format.quality).match(/(\d{3,4})p/i)?.[1] || 0); }
-function choosePresetFormat(formats, preset) {
-  const sorted = [...formats];
-  const resolution = formatResolution;
-  const size = (format) => parseFormatSize(format.size);
-  if (preset === 'audio') return sorted.find((format) => /^(mp3|m4a|aac|wav|ogg|flac)$/i.test(format.extension));
-  if (preset === 'small') return sorted.sort((left, right) => size(left) - size(right))[0];
-  if (preset === 'mobile') return sorted.filter((format) => !resolution(format) || resolution(format) <= 720).sort((left, right) => resolution(right) - resolution(left))[0] || sorted[0];
-  if (preset === 'fast') return sorted.filter((format) => !resolution(format) || resolution(format) <= 720).sort((left, right) => ((/^mp4$/i.test(right.extension)) - (/^mp4$/i.test(left.extension))) || size(left) - size(right))[0] || sorted[0];
-  const compatible = sorted.filter((format) => /^(mp4|m4v)$/i.test(format.extension) && format.hasAudio !== false);
-  if (preset === 'desktop') return sorted.sort((left, right) => resolution(right) - resolution(left) || size(left) - size(right))[0];
-  if (preset === 'best') return sorted.sort((left, right) => ((right.hasAudio !== false) - (left.hasAudio !== false)) || (/^mp4$/i.test(right.extension) - /^mp4$/i.test(left.extension)) || resolution(right) - resolution(left) || size(left) - size(right))[0];
-  return sorted.sort((left, right) => resolution(right) - resolution(left))[0];
-}
-function buildSizeEstimator(formats) {
-  const entries = formats.map((format) => ({ ...format, pixels: formatResolution(format), bytes: parseFormatSize(format.size) })).filter((format) => format.pixels && format.bytes);
-  if (!entries.length) return '<div class="size-estimator"><div><span class="panel-kicker">SIZE ESTIMATOR</span><strong>Source size</strong></div><p>Exact estimates are unavailable for this source. The download size will be reported as it streams.</p></div>';
-  const byQuality = new Map();
-  entries.forEach((format) => { if (!byQuality.has(format.pixels) || format.bytes < byQuality.get(format.pixels).bytes) byQuality.set(format.pixels, format); });
-  const rows = [...byQuality.values()].sort((left, right) => left.pixels - right.pixels).map((format) => `<div><span>${format.pixels}p</span><strong>~${format.size}</strong></div>`).join('');
-  return `<div class="size-estimator"><div><span class="panel-kicker">EXACT FILE SIZE</span><strong>Available quality estimates</strong></div><div class="size-estimator-grid">${rows}</div><small>Based on the source-provided file size. Approximate values can vary slightly.</small></div>`;
-}
-function buildRecommendation(formats) {
-  const selected = choosePresetFormat(formats, 'fast');
-  if (!selected) return '';
-  const quality = selected.quality || 'Original';
-  const size = selected.size || 'Size unavailable';
-  const connection = navigator.connection?.effectiveType || '';
-  const slowConnection = ['slow-2g', '2g', '3g'].includes(connection);
-  const saver = choosePresetFormat(formats, slowConnection ? 'small' : 'mobile');
-  const isSaver = saver && saver.id !== selected.id;
-  const savings = isSaver && parseFormatSize(size) && parseFormatSize(saver.size) ? `Saves ${formatBytes(parseFormatSize(size) - parseFormatSize(saver.size))}` : '';
-  return `<div class="recommendation-panel"><div><span class="panel-kicker">MEDIADROP RECOMMENDATION</span><strong>★ ${escapeHtml(quality)} ${escapeHtml(String(selected.extension).toUpperCase())} <em>${slowConnection ? 'Fast download' : 'Balanced speed'}</em></strong><small>${escapeHtml(size)}${selected.hasAudio === false ? ' · video only' : ''}</small></div><button class="recommendation-button" type="button" data-recommendation-id="${escapeAttr(selected.id)}">Download recommended</button>${isSaver ? `<div class="recommendation-saver"><span>Data saver</span><strong>${escapeHtml(saver.quality)} · ${escapeHtml(saver.size)}</strong><small>${savings}</small><button class="preset-button" type="button" data-preset="mobile">Use saver</button></div>` : ''}</div>`;
-}
-function parseFormatDimensions(format) { const match = String(format?.quality || '').match(/(\d{2,5})x(\d{2,5})/); return match ? { width: Number(match[1]), height: Number(match[2]) } : null; }
-function formatAspectRatio(width, height) { if (!width || !height) return 'Unknown'; const divisor = (left, right) => right ? divisor(right, left % right) : left; const factor = divisor(width, height); return `${Math.round(width / factor)}:${Math.round(height / factor)}`; }
-function buildIntelligenceReport(data, formats) {
-  const dimensions = formats.map(parseFormatDimensions).filter(Boolean).sort((left, right) => right.width * right.height - left.width * left.height)[0];
-  const aspect = dimensions ? formatAspectRatio(dimensions.width, dimensions.height) : 'Source-dependent';
-  const orientation = dimensions ? (dimensions.height > dimensions.width ? 'Vertical' : dimensions.width === dimensions.height ? 'Square' : 'Landscape') : 'Unknown';
-  const score = Math.min(100, 58 + Math.min(formats.length, 10) * 3 + (data.thumbnail ? 8 : 0) + (data.transcriptAvailable ? 7 : 0));
-  const contentType = data.type === 'image' ? 'Image' : data.transcriptAvailable ? 'Captioned video' : 'Video';
-  const compatibility = orientation === 'Vertical' ? 'Strong for Shorts, Reels, and mobile' : orientation === 'Landscape' ? 'Strong for YouTube, desktop, and TV' : 'Check the target platform crop';
-  return `<div class="intelligence-report"><div class="intelligence-heading"><div><span class="panel-kicker">MEDIA INTELLIGENCE</span><strong>${escapeHtml(contentType)} detected</strong></div><span class="intelligence-score">${score}<small>/100</small></span></div><div class="intelligence-grid"><div><span>Orientation</span><strong>${orientation}</strong></div><div><span>Aspect ratio</span><strong>${aspect}</strong></div><div><span>Top resolution</span><strong>${dimensions ? `${dimensions.width} × ${dimensions.height}` : 'Source data unavailable'}</strong></div><div><span>Captions</span><strong>${data.transcriptAvailable ? 'Available' : 'Not reported'}</strong></div></div><p>${escapeHtml(compatibility)}. MediaDrop found ${formats.length} downloadable option${formats.length === 1 ? '' : 's'} for this source.</p></div>`;
-}
-function inspectLocalFile(file) {
-  openFeatureModal('Local media inspector', 'PRIVATE BROWSER ANALYSIS', '<div class="inspector-loading"><span class="spinner"></span><p>Reading the file locally...</p></div>');
-  file.arrayBuffer().then(async (buffer) => {
-    const digest = await crypto.subtle.digest('SHA-256', buffer);
-    const fingerprint = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-    const kind = file.type.startsWith('image/') ? 'Image' : file.type.startsWith('audio/') ? 'Audio' : file.type.startsWith('video/') ? 'Video' : 'File';
-    const mediaUrl = URL.createObjectURL(file);
-    let dimensions = 'Not available';
-    let duration = 'Not available';
-    if (kind === 'Image') await new Promise((resolve) => { const image = new Image(); image.onload = () => { dimensions = `${image.naturalWidth} × ${image.naturalHeight}`; URL.revokeObjectURL(image.src); resolve(); }; image.onerror = resolve; image.src = mediaUrl; });
-    if (kind === 'Video' || kind === 'Audio') await new Promise((resolve) => { const media = document.createElement(kind === 'Video' ? 'video' : 'audio'); media.onloadedmetadata = () => { duration = formatMediaDuration(media.duration); dimensions = kind === 'Video' ? `${media.videoWidth} × ${media.videoHeight}` : 'Audio stream'; URL.revokeObjectURL(media.src); resolve(); }; media.onerror = resolve; media.src = mediaUrl; });
-    openFeatureModal('Local media inspector', 'PRIVATE BROWSER ANALYSIS', `<div class="local-report"><div class="local-file-title"><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(kind)} · ${formatBytes(file.size)}</span></div><div class="intelligence-grid"><div><span>Type</span><strong>${escapeHtml(file.type || 'Unknown')}</strong></div><div><span>Dimensions</span><strong>${escapeHtml(dimensions)}</strong></div><div><span>Duration</span><strong>${escapeHtml(duration)}</strong></div><div><span>Modified</span><strong>${new Date(file.lastModified).toLocaleDateString()}</strong></div></div><div class="fingerprint-block"><span class="panel-kicker">SHA-256 FINGERPRINT</span><code>${fingerprint}</code><button class="copy-metadata" type="button" data-metadata="${fingerprint}">Copy fingerprint</button></div><div class="privacy-check"><span class="status-light"></span><div><strong>Browser privacy check</strong><p>File content was analyzed locally. This browser cannot reliably expose every EXIF/GPS field, so use a metadata-cleaning tool before public sharing.</p></div></div></div>`);
-    featureModalBody.querySelector('.copy-metadata')?.addEventListener('click', (event) => copyText(event.currentTarget.dataset.metadata, event.currentTarget));
-  }).catch(() => openFeatureModal('Inspector unavailable', 'LOCAL TOOL', '<p class="empty-state">The browser could not read this file. Nothing was uploaded.</p>'));
-}
-function openCapabilityMatrix() { const rows = [['YouTube', 'Video · audio · captions'], ['Instagram', 'Video · image · Reels'], ['Facebook', 'Video · image'], ['X / Twitter', 'Video'], ['Direct media', 'Video · audio · image']]; openFeatureModal('Provider capabilities', 'DYNAMIC SUPPORT MAP', `<div class="capability-matrix"><div class="capability-row capability-head"><strong>Provider</strong><strong>Known capabilities</strong></div>${rows.map(([provider, capability]) => `<div class="capability-row"><strong>${provider}</strong><span>${capability}</span></div>`).join('')}</div><p class="status-footnote">Capabilities describe the current adapter surface. The source still decides which formats are actually returned.</p>`); }
-function openPreparationTool() { const targets = [['TikTok', '9:16'], ['Reels', '9:16'], ['YouTube', '16:9'], ['Discord', '16:9'], ['Stories', '9:16'], ['Square', '1:1']]; openFeatureModal('Prepare for platform', 'PLATFORM PREVIEW', `<div class="prepare-tool"><p>Choose a target canvas to preview how this media may be framed. Exporting a full video crop requires a media worker and is kept explicit.</p><div class="prepare-targets">${targets.map(([name, ratio]) => `<button type="button" data-ratio="${ratio}"><strong>${name}</strong><small>${ratio}</small></button>`).join('')}</div><div class="prepare-preview" data-ratio="16:9"><span>Preview canvas</span></div><small class="status-footnote">Preview only: the original file is never modified.</small></div>`); const preview = featureModalBody.querySelector('.prepare-preview'); featureModalBody.querySelectorAll('[data-ratio]').forEach((button) => button.addEventListener('click', () => { preview.dataset.ratio = button.dataset.ratio; preview.style.aspectRatio = button.dataset.ratio.replace(':', ' / '); })); }
 function formatClock(value) { const seconds = Number(value); if (!Number.isFinite(seconds)) return '--:--'; const minutes = Math.floor(seconds / 60); return `${minutes}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`; }
 function formatMediaDuration(value) {
   const seconds = Number(value);
