@@ -11,11 +11,6 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
-    self.registration.unregister();
-    event.waitUntil(self.clients.claim());
-    return;
-  }
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
       keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))

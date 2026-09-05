@@ -48,12 +48,7 @@ if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.
 }
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-      const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
-      await Promise.all(registrations.map((registration) => registration.unregister().catch(() => {})));
-      return;
-    }
+  window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' }).catch(() => {});
   });
 }
