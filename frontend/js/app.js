@@ -23,7 +23,8 @@ const featureModalTitle = document.querySelector('#feature-modal-title');
 const featureModalKicker = document.querySelector('#feature-modal-kicker');
 const installButton = document.querySelector('#install-button');
 let installPrompt = null;
-const isInstalledApp = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const installStateKey = 'mediadrop-installed';
+const isInstalledApp = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || localStorage.getItem(installStateKey) === 'true';
 const showInstalledState = () => {
   installButton.innerHTML = '<span aria-hidden="true">✓</span> Installed';
   installButton.setAttribute('aria-label', 'MediaDrop is already installed');
@@ -52,11 +53,15 @@ installButton.addEventListener('click', async () => {
   installPrompt.prompt();
   const choice = await installPrompt.userChoice;
   installPrompt = null;
-  if (choice.outcome === 'accepted') showInstalledState();
+  if (choice.outcome === 'accepted') {
+    localStorage.setItem(installStateKey, 'true');
+    showInstalledState();
+  }
 });
 
 window.addEventListener('appinstalled', () => {
   installPrompt = null;
+  localStorage.setItem(installStateKey, 'true');
   showInstalledState();
 });
 
